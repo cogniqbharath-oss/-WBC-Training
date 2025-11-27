@@ -7,7 +7,7 @@ Static marketing page showcasing WBC Training programmes, bookings, and automati
 - `styles.css` – all layout, typography, and component styling. Uses CSS custom properties for colors and spacing, plus responsive grid layouts.
 
 ### Preview locally
-1. Run `python serve.py` from the repo root (uses Python's built-in HTTP server).
+1. Windows: double-click `serve.bat` or run `python serve.py` from PowerShell / CMD. (If you prefer the stdlib server, use `python -m http.server 8000`—note the module is `http.server`, not `http.serve`.)
 2. Visit `http://localhost:8000/`—the script serves `index.html` and the CSS automatically.
 
 ### Customising
