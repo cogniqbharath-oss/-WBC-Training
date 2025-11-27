@@ -1,0 +1,20 @@
+<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="chatGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#42e3cf"/>
+      <stop offset="100%" stop-color="#2587ff"/>
+    </linearGradient>
+    <clipPath id="chatMask">
+      <circle cx="110" cy="110" r="100"/>
+    </clipPath>
+  </defs>
+  <circle cx="110" cy="110" r="100" fill="url(#chatGradient)" opacity="0.1"/>
+  <g clip-path="url(#chatMask)" stroke="url(#chatGradient)" stroke-width="18" fill="none">
+    <path d="M-10 45c40 25 80 25 120 0s80-25 120 0"/>
+    <path d="M-10 80c40 25 80 25 120 0s80-25 120 0"/>
+    <path d="M-10 115c40 25 80 25 120 0s80-25 120 0"/>
+    <path d="M-10 150c40 25 80 25 120 0s80-25 120 0"/>
+    <path d="M-10 185c40 25 80 25 120 0s80-25 120 0"/>
+  </g>
+</svg>
+

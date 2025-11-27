@@ -43,20 +43,28 @@
           <a class="btn solid" href="#services">Discover programmes</a>
           <a class="btn outline" href="#insights">Browse insights</a>
         </div>
-        <ul class="hero-stats">
-          <li>
-            <h3>3–5 day</h3>
-            <p>Online & classroom courses for global cohorts.</p>
-          </li>
-          <li>
-            <h3>1–2 hour</h3>
-            <p>Focused workshops delivering rapid skill boosts.</p>
-          </li>
-          <li>
-            <h3>Worldwide</h3>
-            <p>Programmes delivered across Europe, Middle East & US.</p>
-          </li>
-        </ul>
+        <div class="hero-meta">
+          <ul class="hero-stats">
+            <li>
+              <h3>3–5 day</h3>
+              <p>Online & classroom courses for global cohorts.</p>
+            </li>
+            <li>
+              <h3>1–2 hour</h3>
+              <p>Focused workshops delivering rapid skill boosts.</p>
+            </li>
+            <li>
+              <h3>Worldwide</h3>
+              <p>Programmes delivered across Europe, Middle East & US.</p>
+            </li>
+          </ul>
+          <div class="hero-review">
+            <p class="eyebrow">Fast ROI evidence</p>
+            <h3>4.9 / 5 composite rating</h3>
+            <p>Testimonials and course calendars sync right beside the hero CTA.</p>
+            <a class="text-link" href="#testimonials">Read reviews →</a>
+          </div>
+        </div>
       </div>
       <div class="hero-media">
         <img src="https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=900&q=80" alt="Leaders collaborating during a workshop">
@@ -66,6 +74,90 @@
           <p>Live course with downloadable webinar slides and facilitator Q&A.</p>
           <a href="#services" class="text-link">View course details →</a>
         </div>
+      </div>
+    </section>
+
+    <section id="bookings" class="booking-shell">
+      <div class="booking-copy">
+        <p class="eyebrow">Unified online bookings</p>
+        <h2>Sign-ups and real-time availability in one view.</h2>
+        <p>
+          Webinars, online workshops, and in-house training push live capacity to the same interface. Delegates select their
+          journey, see instant availability, and receive automated reminders without waiting on email threads.
+        </p>
+        <div class="badges">
+          <span>AI concierge 24/7</span>
+          <span>Waitlist automation</span>
+          <span>Calendar sync</span>
+        </div>
+      </div>
+      <form class="booking-form">
+        <label>
+          Programme type
+          <select>
+            <option>Executive Webinar</option>
+            <option>Online Workshop</option>
+            <option>In-House Training</option>
+            <option>Custom Engagement</option>
+          </select>
+        </label>
+        <label>
+          Preferred delivery
+          <select>
+            <option>Virtual</option>
+            <option>London</option>
+            <option>Dubai</option>
+            <option>Erbil</option>
+            <option>Houston</option>
+          </select>
+        </label>
+        <label>
+          Target start date
+          <input type="date">
+        </label>
+        <label>
+          Delegates
+          <input type="number" placeholder="e.g. 18">
+        </label>
+        <label>
+          Notes for Course Director
+          <textarea rows="3" placeholder="Share KPIs, focus areas, or travel constraints"></textarea>
+        </label>
+        <button type="submit" class="btn solid full">Check availability</button>
+        <p class="mini-note">Submission triggers confirmations + smart reminders immediately.</p>
+      </form>
+    </section>
+
+    <section class="availability">
+      <div class="availability-head">
+        <p class="eyebrow">Live availability</p>
+        <h2>Fast ROI cohorts ready for booking.</h2>
+      </div>
+      <div class="availability-grid">
+        <article>
+          <div class="badge">Webinar</div>
+          <h3>Trust in Action Series</h3>
+          <p>Global virtual • Weekly</p>
+          <span class="pill">42 seats open</span>
+        </article>
+        <article>
+          <div class="badge">Workshop</div>
+          <h3>Operational Excellence Lab</h3>
+          <p>Dubai • 4–7 Feb</p>
+          <span class="pill warning">8 seats left</span>
+        </article>
+        <article>
+          <div class="badge">In-house</div>
+          <h3>Capital Portfolio Leadership</h3>
+          <p>On-site • London / Dubai</p>
+          <span class="pill ghost">On request</span>
+        </article>
+        <article>
+          <div class="badge">Virtual</div>
+          <h3>Executive War-Games</h3>
+          <p>Follow-the-sun cohorts</p>
+          <span class="pill danger">Waitlist</span>
+        </article>
       </div>
     </section>
 
@@ -112,7 +204,7 @@
           <a href="#contact" class="text-link">See upcoming workshops →</a>
         </article>
         <article>
-          <img class="service-image" src="https://images.unsplash.com/photo-1529333166437-0a0755be0613?auto=format&fit=crop&w=800&q=80" alt="Team collaborating during an in-house training session">
+          <img class="service-image" src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80" alt="Team collaborating during an in-house training session">
           <h3>In-House Training</h3>
           <p>Tailored programmes run for your company, adjusting content, delivery, and scheduling needs.</p>
           <a href="#contact" class="text-link">Request an in-house brief →</a>
@@ -159,7 +251,11 @@
     <section class="testimonials">
       <p class="eyebrow text-center">Testimonials</p>
       <h2 class="text-center">Trusted by global operators and advisors.</h2>
-      <div class="testimonial-grid">
+      <div class="testimonial-highlight">
+        <strong>98%</strong>
+        <p>of cohorts report faster stakeholder alignment within the first six weeks.</p>
+      </div>
+      <div class="testimonial-grid" id="testimonials">
         <figure>
           <blockquote>“From the clarity of the training to the uplifting atmosphere, you can feel the genuine desire to expand knowledge.”</blockquote>
           <figcaption>GKP – Leadership Coaching</figcaption>
@@ -176,6 +272,61 @@
           <blockquote>“A short MBA course with excellent interaction between facilitators and participants—highly recommended.”</blockquote>
           <figcaption>Delta Lift Resources – Executive Education</figcaption>
         </figure>
+      </div>
+    </section>
+
+    <section class="events">
+      <div class="events-head">
+        <p class="eyebrow">Course calendars</p>
+        <h2>Events synced to hero content, reviews, and automation dashboards.</h2>
+        <p>Embed this feed into Fast ROI reports or export the ICS file to your planning stack.</p>
+      </div>
+      <div class="events-grid">
+        <article>
+          <h3>Fast ROI Forum</h3>
+          <p>Virtual • 24 Jan 2026</p>
+          <span class="pill">Registration open</span>
+        </article>
+        <article>
+          <h3>Boardroom Simulation</h3>
+          <p>London • 6 Feb 2026</p>
+          <span class="pill warning">Limited</span>
+        </article>
+        <article>
+          <h3>Digital Twins for Mega Projects</h3>
+          <p>Dubai • 20 Feb 2026</p>
+          <span class="pill danger">Waitlist</span>
+        </article>
+        <article>
+          <h3>Operations Control Lab</h3>
+          <p>Houston • 3 Mar 2026</p>
+          <span class="pill ghost">On request</span>
+        </article>
+      </div>
+    </section>
+
+    <section id="automation" class="automation">
+      <div class="automation-copy">
+        <p class="eyebrow">B. AI & Automation</p>
+        <h2>Automation pipelines tie bookings, reviews, and hero content together.</h2>
+        <ul>
+          <li><strong>AI chatbot</strong> handles instant inquiries about hours, bookings, and directions.</li>
+          <li><strong>Smart reminders</strong> sequence SMS, WhatsApp, and email to recover no-shows.</li>
+          <li><strong>Availability engine</strong> syncs webinars, online workshops, and in-house training capacity.</li>
+          <li><strong>Review ingester</strong> streams post-programme testimonials into hero modules.</li>
+          <li><strong>Ops automations</strong> push clean data to CRM, finance, and Fast ROI dashboards.</li>
+        </ul>
+      </div>
+      <div class="automation-card">
+        <p class="eyebrow">Automation dashboard</p>
+        <h3>Course control tower</h3>
+        <ul>
+          <li>Live roster health plus travel & visa status.</li>
+          <li>Workflow builder for approvals and invoices.</li>
+          <li>Event-stream API for custom hero widgets.</li>
+          <li>Board-ready exports covering bookings, reviews, and events.</li>
+        </ul>
+        <a class="btn outline full" href="mailto:info@wbctraining.com">Request a walkthrough</a>
       </div>
     </section>
 

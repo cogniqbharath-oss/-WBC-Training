@@ -15,7 +15,7 @@
   </div>
   <header class="site-header">
     <div class="brand">
-      <div class="logo">WBC</div>
+      <img src="assets/brand-logo.svg" alt="WBC Training logo" class="logo">
       <div>
         <strong>WBC Training</strong>
         <span>Business capability programmes since 2005</span>
@@ -100,16 +100,19 @@
       <h2 class="text-center">Online & classroom courses, workshops, and bespoke cohorts.</h2>
       <div class="service-grid">
         <article>
+          <img class="service-image" src="https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=800&q=80" alt="Leaders discussing strategy in a workshop room">
           <h3>Online & Classroom Courses</h3>
           <p>Three to five day experiences for individuals or teams covering leadership, procurement, project governance, and strategy.</p>
           <a href="#contact" class="text-link">View all courses →</a>
         </article>
         <article>
+          <img class="service-image" src="https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?auto=format&fit=crop&w=800&q=80" alt="Facilitator hosting a virtual workshop session">
           <h3>Online Workshops</h3>
           <p>Series of short, live sessions designed to focus on specific management capabilities.</p>
           <a href="#contact" class="text-link">See upcoming workshops →</a>
         </article>
         <article>
+          <img class="service-image" src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80" alt="Team collaborating during an in-house training session">
           <h3>In-House Training</h3>
           <p>Tailored programmes run for your company, adjusting content, delivery, and scheduling needs.</p>
           <a href="#contact" class="text-link">Request an in-house brief →</a>
@@ -214,6 +217,25 @@
     </section>
   </main>
 
+  <button class="chat-launcher" id="chat-launcher" aria-haspopup="dialog" aria-controls="chat-panel">
+    <img src="assets/chat-logo.svg" alt="Chat with WBC" />
+  </button>
+  <section class="chat-panel" id="chat-panel" aria-live="polite">
+    <header>
+      <strong>AI Concierge</strong>
+      <button id="chat-close" aria-label="Close chat">&times;</button>
+    </header>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-message bot">
+        Hi there! Ask me about course hours, booking availability, or travel directions and I’ll reply instantly.
+      </div>
+    </div>
+    <form class="chat-form" id="chat-form">
+      <input type="text" id="chat-input" placeholder="Type your question..." aria-label="Chat input">
+      <button type="submit" class="btn solid">Send</button>
+    </form>
+  </section>
+
   <footer class="site-footer">
     <div>
       <div class="logo">WBC</div>
@@ -230,6 +252,71 @@
 
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    const chatLauncher = document.getElementById('chat-launcher');
+    const chatPanel = document.getElementById('chat-panel');
+    const chatClose = document.getElementById('chat-close');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    const faqResponses = [
+      {
+        keywords: ['hour', 'time', 'open'],
+        response: 'We support learners 24/7 with facilitators covering London, Dubai, Erbil, and virtual cohorts. Mention your timezone in the booking note for tailored slots.'
+      },
+      {
+        keywords: ['book', 'booking', 'reserve', 'availability', 'cohort'],
+        response: 'To book a seat, share the course name, preferred city, and delegate count. We’ll confirm within one business day and send automated reminders.'
+      },
+      {
+        keywords: ['direction', 'where', 'location', 'address'],
+        response: 'London HQ: Xeinadin, 46/48 East Street, Epsom, KT17 1HQ. We also host cohorts in Dubai, Erbil, Houston, and virtually.'
+      },
+      {
+        keywords: ['price', 'cost', 'fee'],
+        response: 'Fees vary per programme length and format. Provide the course focus and cohort size, and we’ll share a tailored quote with travel guidance.'
+      }
+    ];
+
+    function toggleChat(open) {
+      chatPanel.classList.toggle('visible', open);
+      if (open) {
+        chatInput.focus();
+      } else {
+        chatLauncher.focus();
+      }
+    }
+
+    function appendMessage(text, sender = 'user') {
+      const bubble = document.createElement('div');
+      bubble.className = `chat-message ${sender}`;
+      bubble.textContent = text;
+      chatMessages.appendChild(bubble);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function getResponse(message) {
+      const lower = message.toLowerCase();
+      const match = faqResponses.find(({ keywords }) =>
+        keywords.some(keyword => lower.includes(keyword))
+      );
+      return match
+        ? match.response
+        : 'I can help with schedules, bookings, pricing, or directions. Could you share a few more details?';
+    }
+
+    chatLauncher.addEventListener('click', () => toggleChat(true));
+    chatClose.addEventListener('click', () => toggleChat(false));
+
+    chatForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+      appendMessage(message, 'user');
+      setTimeout(() => appendMessage(getResponse(message), 'bot'), 300);
+      chatInput.value = '';
+    });
   </script>
 </body>
 </html>
