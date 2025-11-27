@@ -1,19 +1,19 @@
 ## WBC Training landing page
 
-Static marketing page showcasing WBC Training programmes, bookings, and automation stack. The project is intentionally lightweight—there is no build tooling, just hand-authored HTML and CSS.
+Static marketing page that mirrors the public wbctraining.com experience—hero banner, services overview, insights grid, testimonials, newsletter form, and contact module. The project is intentionally lightweight—there is no build tooling, just hand-authored HTML and CSS.
 
 ### Structure
-- `WBC Training.html` – main markup, including hero, booking form, testimonials, automation stack, and the new immersive image showcase section.
-- `styles.css` – all layout, typography, and component styling. Uses CSS custom properties for colors and spacing, plus responsive grid layouts.
+- `index.html` / `WBC Training.html` – same markup so either file can be opened directly or served. Sections follow the official site order: hero, how we help, services, insights & webinars, testimonials, newsletter, and contact.
+- `styles.css` – layout + component styling with CSS custom properties for the navy/teal palette, grid utilities, and responsive fallbacks.
 
 ### Preview locally
 1. Windows: double-click `serve.bat` or run `python serve.py` from PowerShell / CMD. (If you prefer the stdlib server, use `python -m http.server 8000`—note the module is `http.server`, not `http.serve`.)
 2. Visit `http://localhost:8000/`—the script serves `index.html` and the CSS automatically.
 
 ### Customising
-- Replace the Unsplash image URLs in the `image-showcase` section with company photography.
-- Update contact details, locations, or course listings directly in the HTML.
-- Adjust colors or typography by editing the CSS variables at the top of `styles.css`.
+- Swap the Unsplash hero image for approved brand photography.
+- Update insight cards, testimonials, or contact info directly in the HTML sections.
+- Adjust colors or typography via the CSS variables at the top of `styles.css`.
 
 ### Credits
 Fonts served via Google Fonts (`Space Grotesk`). Imagery taken from Unsplash placeholders—swap for owned assets before publishing.
