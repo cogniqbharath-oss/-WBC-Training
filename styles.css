@@ -56,6 +56,15 @@ main,
   gap: 16px;
 }
 
+.logo-link {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.logo-link:hover {
+  transform: scale(1.05);
+}
+
 .logo {
   width: 64px;
   height: 64px;
@@ -249,6 +258,14 @@ main,
   gap: 12px;
 }
 
+.about-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-bottom: 8px;
+}
+
 .service-image {
   width: 100%;
   height: 170px;
@@ -328,6 +345,96 @@ main,
   border: 1px solid var(--border);
   padding: 20px;
   box-shadow: 0 10px 30px rgba(8, 27, 51, 0.08);
+}
+
+.premium-offerings {
+  padding: 60px 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.premium-header {
+  margin-bottom: 40px;
+}
+
+.premium-header p {
+  max-width: 600px;
+  margin: 12px auto 0;
+  color: var(--muted);
+}
+
+.premium-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  margin-top: 32px;
+}
+
+.premium-card {
+  background: var(--card);
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 40px rgba(8, 27, 51, 0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 50px rgba(8, 27, 51, 0.18);
+}
+
+.premium-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.premium-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.premium-content h3 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.premium-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.premium-content ul li {
+  padding-left: 20px;
+  position: relative;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.premium-content ul li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.premium-ctas {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 8px;
 }
 
 .insights {
