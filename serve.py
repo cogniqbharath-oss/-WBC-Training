@@ -2,10 +2,15 @@
 
 import os
 import json
-import google.generativeai as genai
 from http.server import SimpleHTTPRequestHandler
 from socketserver import TCPServer
 from pathlib import Path
+
+try:
+    import google.generativeai as genai  # optional dependency
+except ImportError:
+    genai = None
+    print("WARNING: google-generativeai package missing. Chat endpoint disabled.")
 
 PORT = 8000
 ROOT = Path(__file__).resolve().parent
@@ -13,11 +18,13 @@ ROOT = Path(__file__).resolve().parent
 # Configure Gemini API
 # Ideally, set this in your environment variables: set GEMINI_API_KEY=your_key
 API_KEY = os.environ.get("GEMINI_API_KEY")
-if API_KEY:
+if API_KEY and genai:
     genai.configure(api_key=API_KEY)
     model = genai.GenerativeModel('gemini-pro')
+elif not API_KEY:
+    print("WARNING: GEMINI_API_KEY not found. Chat endpoint disabled.")
+    model = None
 else:
-    print("WARNING: GEMINI_API_KEY not found in environment variables. Chat will not work.")
     model = None
 
 class RootedHandler(SimpleHTTPRequestHandler):
