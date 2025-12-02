@@ -10,6 +10,19 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Hero Background Carousel -->
+  <div class="hero-background-carousel" id="heroCarousel">
+    <div class="carousel-slide active" style="background-image: url('https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=1920&q=80');"></div>
+    <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1920&q=80');"></div>
+    <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1920&q=80');"></div>
+    <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1920&q=80');"></div>
+    <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1920&q=80');"></div>
+    <div class="carousel-controls">
+      <button class="carousel-btn prev" id="carouselPrev" aria-label="Previous image">‹</button>
+      <button class="carousel-btn next" id="carouselNext" aria-label="Next image">›</button>
+    </div>
+    <div class="carousel-indicators" id="carouselIndicators"></div>
+  </div>
   <div class="top-bar">
     <p>Registered in England & Wales · Company No. 9454985 · London | Dubai | Erbil</p>
   </div>
@@ -311,6 +324,52 @@
           <p>Insights on aligning international teams under regulatory pressure.</p>
           <a href="https://wbctraining.com/" class="text-link" target="_blank" rel="noopener">Download report →</a>
         </article>
+      </div>
+    </section>
+
+    <section class="image-gallery">
+      <div class="gallery-header">
+        <p class="eyebrow text-center">Training in Action</p>
+        <h2 class="text-center">See our programmes in action</h2>
+        <p class="text-center">Real workshops, interactive sessions, and collaborative learning environments.</p>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80" alt="Interactive workshop session">
+          <div class="gallery-overlay">
+            <p>Interactive Workshop</p>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=80" alt="Team collaboration training">
+          <div class="gallery-overlay">
+            <p>Team Collaboration</p>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=600&q=80" alt="Leadership development">
+          <div class="gallery-overlay">
+            <p>Leadership Development</p>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=600&q=80" alt="Strategic planning session">
+          <div class="gallery-overlay">
+            <p>Strategic Planning</p>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=600&q=80" alt="Executive training">
+          <div class="gallery-overlay">
+            <p>Executive Training</p>
+          </div>
+        </div>
+        <div class="gallery-item">
+          <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=600&q=80" alt="Virtual learning environment">
+          <div class="gallery-overlay">
+            <p>Virtual Learning</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -653,6 +712,8 @@
     </div>
   </footer>
 
+  <script src="config.js"></script>
+  <script src="hero-carousel.js"></script>
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -663,24 +724,7 @@
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
 
-    const faqResponses = [
-      {
-        keywords: ['hour', 'time', 'open'],
-        response: 'We support learners 24/7 with facilitators covering London, Dubai, Erbil, and virtual cohorts. Mention your timezone in the booking note for tailored slots.'
-      },
-      {
-        keywords: ['book', 'booking', 'reserve', 'availability', 'cohort'],
-        response: 'To book a seat, share the course name, preferred city, and delegate count. We’ll confirm within one business day and send automated reminders.'
-      },
-      {
-        keywords: ['direction', 'where', 'location', 'address'],
-        response: 'London HQ: Xeinadin, 46/48 East Street, Epsom, KT17 1HQ. We also host cohorts in Dubai, Erbil, Houston, and virtually.'
-      },
-      {
-        keywords: ['price', 'cost', 'fee'],
-        response: 'Fees vary per programme length and format. Provide the course focus and cohort size, and we’ll share a tailored quote with travel guidance.'
-      }
-    ];
+    let chatHistory = [];
 
     function toggleChat(open) {
       chatPanel.classList.toggle('visible', open);
@@ -699,26 +743,62 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    function getResponse(message) {
-      const lower = message.toLowerCase();
-      const match = faqResponses.find(({ keywords }) =>
-        keywords.some(keyword => lower.includes(keyword))
-      );
-      return match
-        ? match.response
-        : 'I can help with schedules, bookings, pricing, or directions. Could you share a few more details?';
-    }
-
     chatLauncher.addEventListener('click', () => toggleChat(true));
     chatClose.addEventListener('click', () => toggleChat(false));
 
-    chatForm.addEventListener('submit', event => {
+    chatForm.addEventListener('submit', async event => {
       event.preventDefault();
       const message = chatInput.value.trim();
       if (!message) return;
+
       appendMessage(message, 'user');
-      setTimeout(() => appendMessage(getResponse(message), 'bot'), 300);
       chatInput.value = '';
+      chatInput.disabled = true;
+
+      // Show loading indicator
+      const loadingBubble = document.createElement('div');
+      loadingBubble.className = 'chat-message bot loading';
+      loadingBubble.textContent = 'Thinking...';
+      chatMessages.appendChild(loadingBubble);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      try {
+        // Check if API key is configured (for client-side validation)
+        if (typeof isApiKeyConfigured === 'function' && !isApiKeyConfigured()) {
+          throw new Error('Groq API key not configured on server. Please set the GROQ_API_KEY environment variable.');
+        }
+
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            message: message,
+            history: chatHistory 
+          })
+        });
+
+        const data = await response.json();
+        chatMessages.removeChild(loadingBubble);
+
+        if (data.response) {
+          appendMessage(data.response, 'bot');
+          // Update chat history (simplified - in production, manage this properly)
+          chatHistory.push({ role: 'user', parts: [{ text: message }] });
+          chatHistory.push({ role: 'model', parts: [{ text: data.response }] });
+        } else if (data.error) {
+          appendMessage(`Sorry, I encountered an error: ${data.error}`, 'bot');
+        }
+      } catch (error) {
+        chatMessages.removeChild(loadingBubble);
+        const errorMsg = error.message || 'Sorry, I\'m having trouble connecting. Please try again or contact us directly at info@wbctraining.com';
+        appendMessage(errorMsg, 'bot');
+        console.error('Chat error:', error);
+      } finally {
+        chatInput.disabled = false;
+        chatInput.focus();
+      }
     });
   </script>
 </body>
