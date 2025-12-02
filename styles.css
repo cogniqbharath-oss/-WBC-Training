@@ -986,8 +986,8 @@ section#services.services > * {
 
 .testimonial-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
   margin-top: 32px;
 }
 
@@ -997,6 +997,23 @@ section#services.services > * {
   padding: 24px;
   border: 1px solid var(--border);
   box-shadow: 0 14px 30px rgba(9, 22, 44, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.testimonial-person {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.testimonial-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 8px 18px rgba(8, 27, 51, 0.35);
 }
 
 .testimonial-highlight {
@@ -1143,7 +1160,7 @@ input[type="email"] {
 
 .clients-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
   margin-top: 32px;
   max-width: 1000px;
@@ -1155,11 +1172,11 @@ input[type="email"] {
   background: var(--card);
   border-radius: 20px;
   border: 1px solid var(--border);
-  padding: 24px;
-  text-align: center;
+  padding: 18px 20px;
+  text-align: left;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 14px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 8px 20px rgba(8, 27, 51, 0.08);
 }
@@ -1178,6 +1195,15 @@ input[type="email"] {
 .client-logo span {
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+.client-logo-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 10px 24px rgba(8, 27, 51, 0.18);
 }
 
 .social-media {
