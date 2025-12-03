@@ -1,0 +1,49 @@
+<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="botGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#42e3cf"/>
+      <stop offset="100%" stop-color="#2587ff"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Robot Head -->
+  <rect x="60" y="50" width="100" height="90" rx="15" fill="url(#botGradient)"/>
+  
+  <!-- Left Eye -->
+  <circle cx="85" cy="75" r="8" fill="#ffffff"/>
+  <circle cx="85" cy="75" r="5" fill="#2587ff"/>
+  
+  <!-- Right Eye -->
+  <circle cx="135" cy="75" r="8" fill="#ffffff"/>
+  <circle cx="135" cy="75" r="5" fill="#2587ff"/>
+  
+  <!-- Mouth (smile) -->
+  <path d="M 85 110 Q 110 120 135 110" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- Left Antenna -->
+  <line x1="75" y1="50" x2="70" y2="20" stroke="url(#botGradient)" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="70" cy="18" r="5" fill="url(#botGradient)"/>
+  
+  <!-- Right Antenna -->
+  <line x1="145" y1="50" x2="150" y2="20" stroke="url(#botGradient)" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="150" cy="18" r="5" fill="url(#botGradient)"/>
+  
+  <!-- Body -->
+  <rect x="70" y="140" width="80" height="50" rx="8" fill="url(#botGradient)"/>
+  
+  <!-- Screen/Chest -->
+  <rect x="80" y="150" width="60" height="35" rx="5" fill="#ffffff" opacity="0.25"/>
+  
+  <!-- Left Arm -->
+  <rect x="30" y="155" width="40" height="15" rx="7" fill="url(#botGradient)"/>
+  <circle cx="30" cy="162" r="8" fill="url(#botGradient)"/>
+  
+  <!-- Right Arm -->
+  <rect x="150" y="155" width="40" height="15" rx="7" fill="url(#botGradient)"/>
+  <circle cx="190" cy="162" r="8" fill="url(#botGradient)"/>
+  
+  <!-- Chat bubble indicator -->
+  <circle cx="180" cy="180" r="18" fill="url(#botGradient)"/>
+  <path d="M 175 195 L 170 210 L 180 200" fill="url(#botGradient)"/>
+  <text x="180" y="187" font-size="14" font-weight="bold" text-anchor="middle" fill="#ffffff">💬</text>
+</svg>
