@@ -7,18 +7,18 @@ from socketserver import TCPServer
 from pathlib import Path
 
 try:
-    from groq import Groq  # optional dependency
+    import google.generativeai as genai  # optional dependency
 except ImportError:
-    Groq = None
-    print("WARNING: groq package missing. Chat endpoint disabled.")
+    genai = None
+    print("WARNING: google-generativeai package missing. Chat endpoint disabled.")
 
 PORT = 8000
 ROOT = Path(__file__).resolve().parent
 
 # Load API key from env or .env file
 def load_api_key() -> str | None:
-    """Get GROQ_API_KEY from environment or .env."""
-    env_key = os.environ.get("GROQ_API_KEY")
+    """Get GEMINI_API_KEY from environment or .env."""
+    env_key = os.environ.get("GEMINI_API_KEY")
     if env_key:
         return env_key.strip()
 
@@ -28,30 +28,26 @@ def load_api_key() -> str | None:
             striped = line.strip()
             if not striped or striped.startswith("#"):
                 continue
-            if striped.startswith("GROQ_API_KEY="):
+            if striped.startswith("GEMINI_API_KEY="):
                 _, value = striped.split("=", 1)
                 return value.strip().strip('"').strip("'")
     return None
 
-# Configure Groq API
+# Configure Gemini API
 API_KEY = load_api_key()
-DEFAULT_MODEL = "llama-3.1-8b-instant"
-GROQ_MODEL = os.environ.get("GROQ_MODEL", DEFAULT_MODEL)
-FALLBACK_MODEL_CANDIDATES = [GROQ_MODEL, DEFAULT_MODEL, "llama3-8b-8192", "gemma-7b-it"]
-FALLBACK_MODELS = []
-for model_name in FALLBACK_MODEL_CANDIDATES:
-    if model_name not in FALLBACK_MODELS:
-        FALLBACK_MODELS.append(model_name)
+DEFAULT_MODEL = "gemini-pro"
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)
 
-if API_KEY and Groq:
+if API_KEY and genai:
     try:
-        client = Groq(api_key=API_KEY)
-        print(f"✓ Groq API configured successfully (preferred model: {GROQ_MODEL})")
+        genai.configure(api_key=API_KEY)
+        print(f"✓ Gemini API configured successfully (preferred model: {GEMINI_MODEL})")
+        client = genai.GenerativeModel(GEMINI_MODEL)
     except Exception as api_error:
-        print(f"ERROR: Unable to initialize Groq client -> {api_error}")
+        print(f"ERROR: Unable to initialize Gemini client -> {api_error}")
         client = None
 elif not API_KEY:
-    print("WARNING: GROQ_API_KEY not found. Chat endpoint disabled.")
+    print("WARNING: GEMINI_API_KEY not found. Chat endpoint disabled.")
     client = None
 else:
     client = None
@@ -72,7 +68,7 @@ class RootedHandler(SimpleHTTPRequestHandler):
                 user_message = data.get('message', '')
                 
                 if not client:
-                     response_text = "Error: API Key not configured. Please set GROQ_API_KEY environment variable."
+                     response_text = "Error: API Key not configured. Please set GEMINI_API_KEY environment variable."
                 else:
                     # System prompt for WBC Training context
                     system_prompt = """You are an AI concierge for WBC Training, a business capability training company. 
@@ -85,27 +81,17 @@ class RootedHandler(SimpleHTTPRequestHandler):
                     
                     Be helpful, professional, and concise. If you don't know something, suggest contacting info@wbctraining.com or calling +44 7540 269 827."""
                     
-                    response_text = None
-                    last_error = None
-                    for model_name in FALLBACK_MODELS:
-                        try:
-                            completion = client.chat.completions.create(
-                                model=model_name,
-                                messages=[
-                                    {"role": "system", "content": system_prompt},
-                                    {"role": "user", "content": user_message},
-                                ],
+                    try:
+                        response = client.generate_content(
+                            f"{system_prompt}\n\nUser question: {user_message}",
+                            generation_config=genai.types.GenerationConfig(
                                 temperature=0.7,
-                                max_tokens=800,
+                                max_output_tokens=800,
                             )
-                            response_text = completion.choices[0].message.content.strip()
-                            break
-                        except Exception as e:
-                            last_error = e
-                            continue
-
-                    if not response_text:
-                        response_text = f"Groq API error: {last_error}"
+                        )
+                        response_text = response.text.strip()
+                    except Exception as e:
+                        response_text = f"Gemini API error: {str(e)}"
 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')

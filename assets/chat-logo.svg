@@ -8,7 +8,6 @@
       <circle cx="110" cy="110" r="100"/>
     </clipPath>
   </defs>
-  <circle cx="110" cy="110" r="100" fill="url(#chatGradient)" opacity="0.1"/>
   <g clip-path="url(#chatMask)" stroke="url(#chatGradient)" stroke-width="18" fill="none">
     <path d="M-10 45c40 25 80 25 120 0s80-25 120 0"/>
     <path d="M-10 80c40 25 80 25 120 0s80-25 120 0"/>
