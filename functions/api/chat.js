@@ -39,22 +39,27 @@ export async function onRequest(context) {
   // Upstream URL must be set as an environment variable/Pages secret
   const upstream = env.UPSTREAM_URL;
   if (!upstream) {
-    // Return 200 so callers (and CDNs) don't treat this as a server error.
-    // Provide clear instructions in the payload so the site owner can configure the Pages secret.
-    return new Response(JSON.stringify({
-      ok: false,
-      message: 'UPSTREAM_URL not configured. Set the UPSTREAM_URL Pages secret to your backend URL (e.g. https://api.example.com/api/chat).'
-    }), { status: 200, headers });
+    // Return a friendly fallback using the same `response` field the frontend expects
+    const fallback = {
+      response: "Chat service is temporarily unavailable. Please try again later or contact info@wbctraining.com.",
+      debug: 'UPSTREAM_URL not configured on Pages. Set UPSTREAM_URL Pages secret to backend URL.'
+    };
+    return new Response(JSON.stringify(fallback), { status: 200, headers });
   }
 
   // Prevent obvious recursion: do not allow upstream to point to pages.dev host
   try {
     const upstreamUrl = new URL(upstream);
     if (upstreamUrl.hostname.endsWith('.pages.dev') || upstreamUrl.hostname === 'wbctraining.pages.dev') {
-      return new Response(JSON.stringify({ ok: false, message: 'UPSTREAM_URL points to a Pages host; set it to your backend server to avoid recursion.' }), { status: 200, headers });
+      const fallback = {
+        response: 'Configuration error: UPSTREAM_URL points to a Pages host; set it to your backend server to avoid recursion.',
+        debug: 'UPSTREAM_URL points to a Pages domain'
+      };
+      return new Response(JSON.stringify(fallback), { status: 200, headers });
     }
   } catch (e) {
-    return new Response(JSON.stringify({ ok: false, message: 'Invalid UPSTREAM_URL format' }), { status: 200, headers });
+    const fallback = { response: 'Configuration error: Invalid UPSTREAM_URL format', debug: String(e) };
+    return new Response(JSON.stringify(fallback), { status: 200, headers });
   }
 
   // Proxy to upstream
@@ -76,7 +81,7 @@ export async function onRequest(context) {
       }
     });
   } catch (err) {
-    // Return 200 with error payload so external checks won't see a 5xx.
-    return new Response(JSON.stringify({ ok: false, message: 'Upstream request failed', error: String(err) }), { status: 200, headers });
+    const fallback = { response: 'Upstream request failed. Please try again later.', debug: String(err) };
+    return new Response(JSON.stringify(fallback), { status: 200, headers });
   }
 }
