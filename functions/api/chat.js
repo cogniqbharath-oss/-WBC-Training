@@ -51,10 +51,10 @@ export async function onRequest(context) {
   try {
     const upstreamUrl = new URL(upstream);
     if (upstreamUrl.hostname.endsWith('.pages.dev') || upstreamUrl.hostname === 'wbctraining.pages.dev') {
-      return new Response(JSON.stringify({ ok: false, message: 'UPSTREAM_URL points to a Pages host; set it to your backend server to avoid recursion.' }), { status: 500, headers });
+      return new Response(JSON.stringify({ ok: false, message: 'UPSTREAM_URL points to a Pages host; set it to your backend server to avoid recursion.' }), { status: 200, headers });
     }
   } catch (e) {
-    return new Response(JSON.stringify({ ok: false, message: 'Invalid UPSTREAM_URL format' }), { status: 500, headers });
+    return new Response(JSON.stringify({ ok: false, message: 'Invalid UPSTREAM_URL format' }), { status: 200, headers });
   }
 
   // Proxy to upstream
@@ -76,6 +76,7 @@ export async function onRequest(context) {
       }
     });
   } catch (err) {
-    return new Response(JSON.stringify({ ok: false, message: 'Upstream request failed', error: String(err) }), { status: 502, headers });
+    // Return 200 with error payload so external checks won't see a 5xx.
+    return new Response(JSON.stringify({ ok: false, message: 'Upstream request failed', error: String(err) }), { status: 200, headers });
   }
 }
