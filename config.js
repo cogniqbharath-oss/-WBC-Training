@@ -43,7 +43,14 @@ async function callSecureEndpoint(message) {
     return await response.json();
   } catch (error) {
     console.error('Secure endpoint error:', error);
-    throw error;
+    // Return structured error response instead of generic message
+    return new Response(JSON.stringify({ 
+      ok: false, 
+      message: error.message 
+    }), {
+      status: 500, 
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
