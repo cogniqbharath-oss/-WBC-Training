@@ -35,7 +35,8 @@ def load_api_key() -> str | None:
 
 # Configure Gemini API
 API_KEY = load_api_key()
-DEFAULT_MODEL = "gemini-pro"
+# Switch to a known working Gemini model
+DEFAULT_MODEL = "gemini-1.5-pro"
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)
 
 if API_KEY and genai:

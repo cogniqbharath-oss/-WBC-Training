@@ -3,7 +3,7 @@
 
 const API_CONFIG = {
   PROVIDER: 'Gemini',
-  MODEL_NAME: 'gemini-pro',
+  MODEL_NAME: 'gemini-1.5-pro',
   CHAT_ENDPOINT: '/chat',
   API_KEY_STATUS: 'Managed on server via GEMINI_API_KEY env variable'
 };
