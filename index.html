@@ -636,7 +636,7 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
       try {
-        const response = await fetch('/chat', {
+        const response = await fetch('/gemini', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -649,14 +649,20 @@
         // Remove loading bubble
         chatMessages.removeChild(loadingBubble);
 
-        if (data.response) {
+        // Handle response with proper error checking
+        if (response.ok && data.response) {
           appendMessage(data.response, 'bot');
         } else if (data.error) {
           appendMessage(`Error: ${data.error}`, 'bot');
+        } else if (data.message) {
+          // Handle structured error responses from config.js
+          appendMessage(`Error: ${data.message}`, 'bot');
+        } else {
+          appendMessage('Unable to process your request. Please try again.', 'bot');
         }
       } catch (error) {
         chatMessages.removeChild(loadingBubble);
-        appendMessage('Sorry, something went wrong. Please try again later.', 'bot');
+        appendMessage('Connection error. Please check your internet and try again.', 'bot');
         console.error('Chat error:', error);
       }
     });

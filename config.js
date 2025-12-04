@@ -4,11 +4,11 @@
 const API_CONFIG = {
   PROVIDER: 'Gemini',
   MODEL_NAME: 'gemini-1.5-pro',
-  CHAT_ENDPOINT: '/chat',
+  CHAT_ENDPOINT: '/gemini',
   API_KEY_STATUS: 'Managed on server via GEMINI_API_KEY env variable',
   // Secure endpoint configuration - API key hidden server-side
   SECURE_ENDPOINT: {
-    url: '/chat',
+    url: '/gemini',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
