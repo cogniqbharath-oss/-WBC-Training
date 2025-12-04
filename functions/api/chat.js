@@ -6,6 +6,8 @@ export async function onRequest(context) {
     'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization'
   };
+  // Add a diagnostic header so we can confirm the Function executed
+  headers['X-Function-Active'] = 'true';
 
   // CORS preflight
   if (request.method === 'OPTIONS') {
