@@ -39,7 +39,12 @@ export async function onRequest(context) {
   // Upstream URL must be set as an environment variable/Pages secret
   const upstream = env.UPSTREAM_URL;
   if (!upstream) {
-    return new Response(JSON.stringify({ ok: false, message: 'Upstream not configured. Set UPSTREAM_URL Pages secret to your backend URL.' }), { status: 500, headers });
+    // Return 200 so callers (and CDNs) don't treat this as a server error.
+    // Provide clear instructions in the payload so the site owner can configure the Pages secret.
+    return new Response(JSON.stringify({
+      ok: false,
+      message: 'UPSTREAM_URL not configured. Set the UPSTREAM_URL Pages secret to your backend URL (e.g. https://api.example.com/api/chat).'
+    }), { status: 200, headers });
   }
 
   // Prevent obvious recursion: do not allow upstream to point to pages.dev host
