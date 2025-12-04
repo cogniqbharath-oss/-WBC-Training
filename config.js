@@ -85,14 +85,38 @@ const ENDPOINT_CONFIG = {
       });
     }
 
-    // Only accept POST
+    // Allow GET for health/info and accept POST for chat.
     if (request.method !== 'POST') {
+      // For GET requests return a friendly 200 with usage information so Cloudflare
+      // or health checks won't receive a 4xx status.
+      if (request.method === 'GET') {
+        return new Response(JSON.stringify({
+          ok: true,
+          message: 'WBC Training chat endpoint. Send a POST with JSON body { "message": "..." } to chat.'
+        }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          }
+        });
+      }
+
+      // For other methods (PUT, DELETE, etc.) return 200 with a clear message
+      // instead of 405 so proxies or strict Gateways won't error out.
       return new Response(JSON.stringify({ 
         ok: false,
-        message: 'Method not allowed' 
+        message: `Method ${request.method} not supported; use POST`
       }), {
-        status: 405,
-        headers: { 'Content-Type': 'application/json' }
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
       });
     }
 

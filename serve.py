@@ -147,6 +147,21 @@ class RootedHandler(SimpleHTTPRequestHandler):
         self.send_response(204)
         self.end_headers()
 
+    def do_GET(self):
+        """Handle GET requests for health or info on /api/chat; otherwise serve files."""
+        if self.path == '/api/chat':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            payload = {
+                'ok': True,
+                'message': 'WBC Training chat endpoint. POST JSON { "message": "..." } to this endpoint.'
+            }
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
+            return
+        # Fall back to normal file serving for other GET requests
+        return super().do_GET()
+
     def do_POST(self):
         """Handle POST requests - chat endpoint."""
         if self.path == '/api/chat':
