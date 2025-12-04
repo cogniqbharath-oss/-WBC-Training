@@ -143,7 +143,7 @@ class RootedHandler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     def do_POST(self):
-        if self.path == '/chat' or self.path == '/gemini':
+        if self.path == '/api/chat':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             
