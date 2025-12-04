@@ -35,10 +35,9 @@ def load_api_key() -> str | None:
 
 # Configure Gemini API
 API_KEY = load_api_key()
+# Switch to a known working Gemini model
 DEFAULT_MODEL = "gemini-1.5-pro"
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)
-
-client = None
 
 if API_KEY and genai:
     try:
@@ -49,6 +48,7 @@ if API_KEY and genai:
         available_models = []
         try:
             lm = None
+            # try commonly used listing methods depending on SDK version
             try:
                 lm = genai.list_models()
             except Exception:
@@ -58,6 +58,7 @@ if API_KEY and genai:
                     lm = None
 
             if lm is not None:
+                # normalize several possible return shapes
                 if isinstance(lm, dict) and 'models' in lm:
                     for m in lm['models']:
                         if isinstance(m, dict) and 'name' in m:
@@ -81,9 +82,11 @@ if API_KEY and genai:
         if available_models:
             print("Available models (sample):", available_models[:20])
 
-        # Build an ordered candidate list
+        # Build an ordered candidate list. If we fetched available models, prefer
+        # recent 'models/gemini-*' entries returned by the API.
         candidate_models = []
         if available_models:
+            # Preferred explicit names if present
             preferred = [
                 'models/gemini-2.5-pro',
                 'models/gemini-2.5-flash',
@@ -94,12 +97,14 @@ if API_KEY and genai:
                 if any(p == name for name in available_models):
                     candidate_models.append(p)
 
+            # Add any other gemini models (exclude embeddings and tts variants)
             for name in available_models:
                 lname = name.lower()
                 if 'gemini' in lname and 'embed' not in lname and 'embedding' not in lname and 'tts' not in lname:
                     if name not in candidate_models:
                         candidate_models.append(name)
 
+        # Always append the originally configured model and a few legacy fallbacks
         candidate_models.extend([
             GEMINI_MODEL,
             'gemini-1.5',
@@ -108,6 +113,7 @@ if API_KEY and genai:
             'text-bison-001'
         ])
 
+        client = None
         for candidate in candidate_models:
             try:
                 print(f"Attempting model: {candidate}")
@@ -126,6 +132,7 @@ if API_KEY and genai:
         client = None
 elif not API_KEY:
     print("WARNING: GEMINI_API_KEY not found. Chat endpoint disabled.")
+    client = None
 else:
     client = None
 
@@ -150,40 +157,26 @@ class RootedHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         """Handle POST requests - chat endpoint."""
         if self.path == '/api/chat':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
             try:
-                # Get content length safely
-                content_length = int(self.headers.get('Content-Length', 0))
-                if content_length == 0:
-                    self.send_response(400)
-                    self.send_header('Content-type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'response': 'Error: Invalid request (empty body)'}).encode('utf-8'))
-                    return
-                
-                post_data = self.rfile.read(content_length)
                 data = json.loads(post_data.decode('utf-8'))
-                user_message = data.get('message', '').strip()
-                
-                if not user_message:
-                    self.send_response(400)
-                    self.send_header('Content-type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'response': 'Error: Message cannot be empty'}).encode('utf-8'))
-                    return
+                user_message = data.get('message', '')
                 
                 if not client:
-                    response_text = "Error: API Key not configured. Please set GEMINI_API_KEY environment variable."
+                     response_text = "Error: API Key not configured. Please set GEMINI_API_KEY environment variable."
                 else:
                     # System prompt for WBC Training context
                     system_prompt = """You are an AI concierge for WBC Training, a business capability training company. 
-You help with:
-- Course information and schedules
-- Booking availability
-- Pricing and fees
-- Location and travel directions
-- Training programme details
-
-Be helpful, professional, and concise. If you don't know something, suggest contacting info@wbctraining.com or calling +44 7540 269 827."""
+                    You help with:
+                    - Course information and schedules
+                    - Booking availability
+                    - Pricing and fees
+                    - Location and travel directions
+                    - Training programme details
+                    
+                    Be helpful, professional, and concise. If you don't know something, suggest contacting info@wbctraining.com or calling +44 7540 269 827."""
                     
                     try:
                         response = client.generate_content(
@@ -197,28 +190,21 @@ Be helpful, professional, and concise. If you don't know something, suggest cont
                     except Exception as e:
                         response_text = f"Gemini API error: {str(e)}"
 
-                # Always return 200 with response field for client compatibility
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({'response': response_text}).encode('utf-8'))
                 
-            except json.JSONDecodeError:
-                self.send_response(400)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'response': 'Error: Invalid JSON'}).encode('utf-8'))
             except Exception as e:
-                print(f"Error handling POST request: {e}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({'response': f'Error: {str(e)}'}).encode('utf-8'))
+                self.wfile.write(json.dumps({'ok': False, 'error': str(e)}).encode('utf-8'))
         else:
             self.send_response(404)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({'response': 'Error: Endpoint not found'}).encode('utf-8'))
+            self.wfile.write(json.dumps({'ok': False, 'error': 'Not found'}).encode('utf-8'))
 
 def main():
     with TCPServer(("", PORT), RootedHandler) as httpd:
@@ -230,3 +216,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
