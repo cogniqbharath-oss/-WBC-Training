@@ -4,16 +4,7 @@
       <stop offset="0%" stop-color="#42e3cf"/>
       <stop offset="100%" stop-color="#2587ff"/>
     </linearGradient>
-    <clipPath id="chatMask">
-      <circle cx="110" cy="110" r="100"/>
-    </clipPath>
   </defs>
-  <g clip-path="url(#chatMask)" stroke="url(#chatGradient)" stroke-width="18" fill="none">
-    <path d="M-10 45c40 25 80 25 120 0s80-25 120 0"/>
-    <path d="M-10 80c40 25 80 25 120 0s80-25 120 0"/>
-    <path d="M-10 115c40 25 80 25 120 0s80-25 120 0"/>
-    <path d="M-10 150c40 25 80 25 120 0s80-25 120 0"/>
-    <path d="M-10 185c40 25 80 25 120 0s80-25 120 0"/>
-  </g>
+  <path d="M110 30c-44.2 0-80 32.2-80 72 0 22.5 11.2 42.6 28.8 56l-8.8 32 36-18c7.6 2.6 15.8 4 24 4 44.2 0 80-32.2 80-72s-35.8-72-80-72z" 
+        fill="url(#chatGradient)"/>
 </svg>
-
