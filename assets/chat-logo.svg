@@ -1,10 +1,4 @@
 <svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="chatGradient" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#42e3cf"/>
-      <stop offset="100%" stop-color="#2587ff"/>
-    </linearGradient>
-  </defs>
   <path d="M110 30c-44.2 0-80 32.2-80 72 0 22.5 11.2 42.6 28.8 56l-8.8 32 36-18c7.6 2.6 15.8 4 24 4 44.2 0 80-32.2 80-72s-35.8-72-80-72z" 
-        fill="url(#chatGradient)"/>
+        fill="#2587ff"/>
 </svg>

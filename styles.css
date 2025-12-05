@@ -1270,7 +1270,6 @@ input[type="email"] {
   bottom: 24px;
   right: 24px;
   z-index: 1000;
-  box-shadow: 0 15px 40px rgba(8, 27, 51, 0.25);
   cursor: pointer;
   border: none;
   background: transparent;
