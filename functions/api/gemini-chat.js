@@ -5,7 +5,7 @@ export async function onRequestPost({ request, env }) {
     "Access-Control-Allow-Origin": "*",
   };
 
-  // 1) Read request body safely
+  // ---- 1) Read request body safely ----
   let body;
   try {
     body = await request.json();
@@ -24,7 +24,7 @@ export async function onRequestPost({ request, env }) {
     );
   }
 
-  // 2) Check API key
+  // ---- 2) Check API key ----
   if (!env.GEMINI_API_KEY) {
     return new Response(
       JSON.stringify({ error: "GEMINI_API_KEY is not set in environment" }),
@@ -32,7 +32,7 @@ export async function onRequestPost({ request, env }) {
     );
   }
 
-  // 3) Call Gemini, but guard network errors so we NEVER throw
+  // ---- 3) Call Gemini (catch network errors) ----
   const geminiUrl =
     "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
@@ -52,20 +52,23 @@ User: ${userMessage}
 
   let geminiRes;
   try {
-    geminiRes = await fetch(`${geminiUrl}?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
-          },
-        ],
-      }),
-    });
+    geminiRes = await fetch(
+      `${geminiUrl}?key=${encodeURIComponent(env.GEMINI_API_KEY)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: prompt }],
+            },
+          ],
+        }),
+      }
+    );
   } catch (e) {
-    // Network-level error reaching Google
+    // Could not reach Google at all
     return new Response(
       JSON.stringify({
         error: "Failed to reach Gemini API",
@@ -77,12 +80,13 @@ User: ${userMessage}
 
   const text = await geminiRes.text();
 
+  // ---- 4) Parse JSON (or return raw error) ----
   let json = null;
   try {
     json = JSON.parse(text);
   } catch (e) {
-    // Gemini returned non-JSON
     if (!geminiRes.ok) {
+      // Gemini returned a non-JSON error body (rare but possible)
       return new Response(
         JSON.stringify({
           error: "Gemini API error (non-JSON response)",
@@ -92,6 +96,7 @@ User: ${userMessage}
         { status: 502, headers }
       );
     }
+
     return new Response(
       JSON.stringify({
         error: "Failed to parse Gemini JSON",
@@ -102,11 +107,11 @@ User: ${userMessage}
     );
   }
 
-  // 4) Handle Gemini errors (4xx / 5xx)
+  // ---- 5) Handle Gemini error JSON ----
   if (!geminiRes.ok) {
     const message =
-      (json && json.error && json.error.message) ||
-      JSON.stringify(json);
+      (json && json.error && json.error.message) || JSON.stringify(json);
+
     return new Response(
       JSON.stringify({
         error: "Gemini API error",
@@ -117,7 +122,7 @@ User: ${userMessage}
     );
   }
 
-  // 5) Normal success path
+  // ---- 6) Normal success path ----
   const candidates = json.candidates || [];
   const first = candidates[0] || {};
   const parts = (first.content && first.content.parts) || [];
@@ -131,6 +136,7 @@ User: ${userMessage}
   });
 }
 
+// Handle OPTIONS preflight (good practice)
 export function onRequestOptions() {
   return new Response(null, {
     status: 204,
@@ -141,6 +147,7 @@ export function onRequestOptions() {
     },
   });
 }
+
 
 
 
