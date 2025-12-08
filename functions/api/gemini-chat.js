@@ -23,6 +23,7 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
+    // ✅ Use a widely available model
     const geminiEndpoint =
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
@@ -56,40 +57,55 @@ User: ${userMessage}
       }
     );
 
-    const text = await geminiRes.text();
+    const raw = await geminiRes.text();
 
     if (!geminiRes.ok) {
+      // ⛔ THIS IS THE PART YOU'RE SEEING NOW
+      // We surface Gemini's own error clearly so you know what to fix.
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        parsed = null;
+      }
+
+      let geminiMessage = raw;
+      if (parsed && parsed.error && parsed.error.message) {
+        geminiMessage = parsed.error.message;
+      }
+
       return new Response(
         JSON.stringify({
           error: "Gemini API error",
-          status: geminiRes.status,
-          detail: text,
+          geminiStatus: geminiRes.status,
+          geminiMessage,
+          geminiRaw: parsed || raw,
         }),
         { status: 502, headers }
       );
     }
 
-    let geminiJson;
+    let json;
     try {
-      geminiJson = JSON.parse(text);
-    } catch (e) {
+      json = JSON.parse(raw);
+    } catch {
       return new Response(
         JSON.stringify({
-          error: "Failed to parse Gemini JSON",
-          detail: text,
+          error: "Failed to parse successful Gemini response",
+          detail: raw,
         }),
         { status: 500, headers }
       );
     }
 
-    const candidates = geminiJson.candidates || [];
+    const candidates = json.candidates || [];
     const first = candidates[0] || {};
     const parts = (first.content && first.content.parts) || [];
-    const replyText =
+    const reply =
       parts.map((p) => p.text || "").join(" ").trim() ||
       "Sorry, I could not generate a response right now.";
 
-    return new Response(JSON.stringify({ reply: replyText }), {
+    return new Response(JSON.stringify({ reply }), {
       status: 200,
       headers,
     });
@@ -104,6 +120,7 @@ User: ${userMessage}
   }
 }
 
+// Allow OPTIONS (not strictly needed, but nice to have)
 export function onRequestOptions() {
   return new Response(null, {
     status: 204,
@@ -114,4 +131,5 @@ export function onRequestOptions() {
     },
   });
 }
+
 
