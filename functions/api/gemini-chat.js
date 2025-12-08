@@ -5,29 +5,38 @@ export async function onRequestPost({ request, env }) {
     "Access-Control-Allow-Origin": "*",
   };
 
+  // 1) Read request body safely
+  let body;
   try {
-    const body = await request.json().catch(() => ({}));
-    const userMessage = (body.message || "").toString().trim();
+    body = await request.json();
+  } catch (e) {
+    return new Response(
+      JSON.stringify({ error: "Invalid JSON body", detail: String(e) }),
+      { status: 400, headers }
+    );
+  }
 
-    if (!userMessage) {
-      return new Response(
-        JSON.stringify({ error: "Missing `message` in request body" }),
-        { status: 400, headers }
-      );
-    }
+  const userMessage = (body.message || "").toString().trim();
+  if (!userMessage) {
+    return new Response(
+      JSON.stringify({ error: "Missing `message` in request body" }),
+      { status: 400, headers }
+    );
+  }
 
-    if (!env.GEMINI_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "GEMINI_API_KEY is not set in environment" }),
-        { status: 500, headers }
-      );
-    }
+  // 2) Check API key
+  if (!env.GEMINI_API_KEY) {
+    return new Response(
+      JSON.stringify({ error: "GEMINI_API_KEY is not set in environment" }),
+      { status: 500, headers }
+    );
+  }
 
-    // ✅ Use a widely available model
-    const geminiEndpoint =
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+  // 3) Call Gemini, but guard network errors so we NEVER throw
+  const geminiUrl =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
-    const prompt = `
+  const prompt = `
 You are the AI Concierge for WBC Training.
 
 Answer clearly and helpfully about:
@@ -39,86 +48,89 @@ Answer clearly and helpfully about:
 If asked about bookings, remind users they can email info@wbctraining.com or call +44 7540 269 827.
 
 User: ${userMessage}
-    `.trim();
+  `.trim();
 
-    const geminiRes = await fetch(
-      `${geminiEndpoint}?key=${env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }],
-            },
-          ],
-        }),
-      }
+  let geminiRes;
+  try {
+    geminiRes = await fetch(`${geminiUrl}?key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+      }),
+    });
+  } catch (e) {
+    // Network-level error reaching Google
+    return new Response(
+      JSON.stringify({
+        error: "Failed to reach Gemini API",
+        detail: String(e),
+      }),
+      { status: 502, headers }
     );
+  }
 
-    const raw = await geminiRes.text();
+  const text = await geminiRes.text();
 
+  let json = null;
+  try {
+    json = JSON.parse(text);
+  } catch (e) {
+    // Gemini returned non-JSON
     if (!geminiRes.ok) {
-      const raw = await geminiRes.text();
-      let parsed;
-      try {
-        parsed = JSON.parse(raw);
-      } catch {
-        parsed = null;
-      }
-
-      let geminiMessage = raw;
-      if (parsed && parsed.error && parsed.error.message) {
-        geminiMessage = parsed.error.message;
-      }
-
       return new Response(
         JSON.stringify({
-          error: "Gemini API error",
-          geminiStatus: geminiRes.status,
-          geminiMessage,
-          geminiRaw: parsed || raw,
+          error: "Gemini API error (non-JSON response)",
+          status: geminiRes.status,
+          detail: text,
         }),
         { status: 502, headers }
       );
     }
-    let json;
-    try {
-      json = JSON.parse(raw);
-    } catch {
-      return new Response(
-        JSON.stringify({
-          error: "Failed to parse successful Gemini response",
-          detail: raw,
-        }),
-        { status: 500, headers }
-      );
-    }
-
-    const candidates = json.candidates || [];
-    const first = candidates[0] || {};
-    const parts = (first.content && first.content.parts) || [];
-    const reply =
-      parts.map((p) => p.text || "").join(" ").trim() ||
-      "Sorry, I could not generate a response right now.";
-
-    return new Response(JSON.stringify({ reply }), {
-      status: 200,
-      headers,
-    });
-  } catch (err) {
     return new Response(
       JSON.stringify({
-        error: "Internal server error in /api/gemini-chat",
-        detail: String(err),
+        error: "Failed to parse Gemini JSON",
+        status: geminiRes.status,
+        detail: text,
       }),
       { status: 500, headers }
     );
   }
+
+  // 4) Handle Gemini errors (4xx / 5xx)
+  if (!geminiRes.ok) {
+    const message =
+      (json && json.error && json.error.message) ||
+      JSON.stringify(json);
+    return new Response(
+      JSON.stringify({
+        error: "Gemini API error",
+        status: geminiRes.status,
+        detail: message,
+      }),
+      { status: 502, headers }
+    );
+  }
+
+  // 5) Normal success path
+  const candidates = json.candidates || [];
+  const first = candidates[0] || {};
+  const parts = (first.content && first.content.parts) || [];
+  const reply =
+    parts.map((p) => p.text || "").join(" ").trim() ||
+    "Sorry, I could not generate a response right now.";
+
+  return new Response(JSON.stringify({ reply }), {
+    status: 200,
+    headers,
+  });
 }
 
-// Allow OPTIONS (not strictly needed, but nice to have)
 export function onRequestOptions() {
   return new Response(null, {
     status: 204,
@@ -129,5 +141,6 @@ export function onRequestOptions() {
     },
   });
 }
+
 
 
