@@ -98,50 +98,65 @@
     scrollToBottom();
   }
 
-  async function sendMessage(rawText) {
-    const text = rawText.trim();
-    if (!text || isSending) return;
+ async function sendMessage(rawText) {
+  const text = rawText.trim();
+  if (!text || isSending) return;
 
-    setPanelVisible(true);
-    addAssistantGreetingOnce();
+  setPanelVisible(true);
+  addAssistantGreetingOnce();
 
-    const userBubble = createMessageBubble(text, 'user');
-    messagesContainer.appendChild(userBubble);
-    scrollToBottom();
-    inputField.value = '';
+  // User bubble
+  const userBubble = createMessageBubble(text, 'user');
+  messagesContainer.appendChild(userBubble);
+  scrollToBottom();
+  inputField.value = '';
 
-    try {
-      setSendingState(true);
+  // Assistant bubble (empty at first)
+  const assistantWrapper = document.createElement('div');
+  assistantWrapper.className = 'ai-message ai-message-assistant';
 
-      const res = await fetch(API_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
-      });
+  const assistantBubble = document.createElement('div');
+  assistantBubble.className =
+    'inline-block max-w-[80%] rounded-2xl px-3 py-2 text-sm bg-slate-100 text-slate-900 mr-auto whitespace-pre-wrap';
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  assistantWrapper.appendChild(assistantBubble);
+  messagesContainer.appendChild(assistantWrapper);
+  scrollToBottom();
 
-      const data = await res.json();
-      const reply =
-        data.reply ||
-        data.text ||
-        'Sorry, I could not generate a response right now. Please try again.';
+  try {
+    setSendingState(true);
 
-      const assistantBubble = createMessageBubble(reply, 'assistant');
-      messagesContainer.appendChild(assistantBubble);
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
+    });
+
+    if (!response.body) throw new Error('No response body');
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      fullText += chunk;
+
+      assistantBubble.textContent = fullText;
       scrollToBottom();
-    } catch (err) {
-      console.error('AI Concierge error:', err);
-      const errorBubble = createMessageBubble(
-        'Oops – something went wrong talking to the AI. Please try again in a moment.',
-        'assistant'
-      );
-      messagesContainer.appendChild(errorBubble);
-      scrollToBottom();
-    } finally {
-      setSendingState(false);
     }
+
+  } catch (err) {
+    assistantBubble.textContent =
+      'Sorry — something went wrong. Please try again.';
+    console.error(err);
+  } finally {
+    setSendingState(false);
   }
+}
 
   // Events
   if (launcherImage) {
