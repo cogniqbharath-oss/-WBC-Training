@@ -11,6 +11,7 @@
   const headerCloseBtn = document.getElementById("ai-concierge-close");
   const sendButton = document.getElementById("ai-concierge-send");
   const inputField = document.getElementById("ai-concierge-input");
+
   const form = document.getElementById("ai-concierge-form");
   const messagesContainer = document.getElementById("ai-concierge-messages");
   const clearChatButton = document.getElementById("ai-concierge-clear");
@@ -69,14 +70,13 @@
     setPanelVisible(true);
     addAssistantGreetingOnce();
 
-    // add user bubble
     const userBubble = createMessageBubble(text, "user");
     messagesContainer.appendChild(userBubble);
     scrollToBottom();
     inputField.value = "";
 
     isSending = true;
-    if (sendButton) sendButton.disabled = true;
+    sendButton && (sendButton.disabled = true);
     inputField.disabled = true;
 
     try {
@@ -88,6 +88,7 @@
 
       const dataText = await res.text();
       let data = null;
+
       try {
         data = JSON.parse(dataText);
       } catch (e) {
@@ -103,11 +104,11 @@
         return;
       }
 
+      // ✅ ATTACHED ERROR-DETAIL LOGIC (THIS IS THE ONLY CHANGE)
       if (data.error) {
+        const extra = data.detail ? ` – ${data.detail}` : "";
         console.error("Chat service error:", data);
-        addAssistantMessage(
-          "Error from AI service: " + (data.error || "Unknown error. Please try again later.")
-        );
+        addAssistantMessage("Error from AI service: " + data.error + extra);
         return;
       }
 
@@ -119,61 +120,57 @@
       addAssistantMessage(reply);
     } catch (err) {
       console.error("Chat fetch error:", err);
-      addAssistantMessage("Error: Unable to reach chat service. Please try again later.");
+      addAssistantMessage(
+        "Error: Unable to reach chat service. Please try again later."
+      );
     } finally {
       isSending = false;
-      if (sendButton) sendButton.disabled = false;
+      sendButton && (sendButton.disabled = false);
       inputField.disabled = false;
     }
   }
 
   // Events
-  if (launcherImage) {
-    launcherImage.style.cursor = "pointer";
+  launcherImage &&
     launcherImage.addEventListener("click", () => {
       const isHidden = conciergePanel.classList.contains("hidden");
       setPanelVisible(isHidden);
       if (isHidden) addAssistantGreetingOnce();
     });
-  }
 
-  if (headerCloseBtn) {
+  headerCloseBtn &&
     headerCloseBtn.addEventListener("click", () => setPanelVisible(false));
-  }
 
-  if (form) {
+  form &&
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       sendMessage(inputField.value);
     });
-  }
 
-  if (sendButton) {
+  sendButton &&
     sendButton.addEventListener("click", () => {
       sendMessage(inputField.value);
     });
-  }
 
-  if (clearChatButton) {
+  clearChatButton &&
     clearChatButton.addEventListener("click", () => {
       messagesContainer.innerHTML = "";
       delete messagesContainer.dataset.initialised;
       addAssistantGreetingOnce();
     });
-  }
 
   quickPromptButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
-      const prompt = btn.getAttribute("data-ai-quick-prompt") || btn.textContent || "";
-      if (!prompt) return;
-      sendMessage(prompt);
+      const prompt =
+        btn.getAttribute("data-ai-quick-prompt") || btn.textContent || "";
+      prompt && sendMessage(prompt);
     });
   });
 
-  // If panel starts visible
   if (conciergePanel && !conciergePanel.classList.contains("hidden")) {
     addAssistantGreetingOnce();
   }
 })();
+
 
 

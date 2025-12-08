@@ -24,7 +24,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     const geminiEndpoint =
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent";
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
     const prompt = `
 You are the AI Concierge for WBC Training.
