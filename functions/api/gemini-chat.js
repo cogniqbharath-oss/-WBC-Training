@@ -1,41 +1,28 @@
 // Cloudflare Pages Function: POST /api/gemini-chat
 export async function onRequestPost({ request, env }) {
-  const corsHeaders = {
+  const headers = {
+    "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
   };
 
   try {
-    // Read JSON body
-    let body = {};
-    try {
-      body = await request.json();
-    } catch (e) {
-      return new Response(
-        JSON.stringify({ error: "Invalid JSON body" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const userMessage = String(body.message || "").trim();
+    const body = await request.json().catch(() => ({}));
+    const userMessage = (body.message || "").toString().trim();
 
     if (!userMessage) {
       return new Response(
         JSON.stringify({ error: "Missing `message` in request body" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 400, headers }
       );
     }
 
     if (!env.GEMINI_API_KEY) {
-      // This is the most common cause of 500s
       return new Response(
-        JSON.stringify({ error: "GEMINI_API_KEY is not set in Cloudflare environment" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ error: "GEMINI_API_KEY is not set in environment" }),
+        { status: 500, headers }
       );
     }
 
-    // Gemini API call
     const geminiEndpoint =
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent";
 
@@ -69,23 +56,29 @@ User: ${userMessage}
       }
     );
 
-    const rawText = await geminiRes.text();
+    const text = await geminiRes.text();
 
     if (!geminiRes.ok) {
-      // Bubble Gemini’s error back instead of a generic 500
       return new Response(
-        JSON.stringify({ error: "Gemini API error", detail: rawText }),
-        { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({
+          error: "Gemini API error",
+          status: geminiRes.status,
+          detail: text,
+        }),
+        { status: 502, headers }
       );
     }
 
     let geminiJson;
     try {
-      geminiJson = JSON.parse(rawText);
+      geminiJson = JSON.parse(text);
     } catch (e) {
       return new Response(
-        JSON.stringify({ error: "Failed to parse Gemini response", detail: rawText }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({
+          error: "Failed to parse Gemini JSON",
+          detail: text,
+        }),
+        { status: 500, headers }
       );
     }
 
@@ -96,20 +89,21 @@ User: ${userMessage}
       parts.map((p) => p.text || "").join(" ").trim() ||
       "Sorry, I could not generate a response right now.";
 
-    return new Response(
-      JSON.stringify({ reply: replyText }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return new Response(JSON.stringify({ reply: replyText }), {
+      status: 200,
+      headers,
+    });
   } catch (err) {
-    // Catch any unexpected errors
     return new Response(
-      JSON.stringify({ error: "Internal server error", detail: String(err) }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      JSON.stringify({
+        error: "Internal server error in /api/gemini-chat",
+        detail: String(err),
+      }),
+      { status: 500, headers }
     );
   }
 }
 
-// Optional: handle OPTIONS preflight (good practice)
 export function onRequestOptions() {
   return new Response(null, {
     status: 204,
@@ -120,3 +114,4 @@ export function onRequestOptions() {
     },
   });
 }
+
