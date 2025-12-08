@@ -148,8 +148,8 @@ class RootedHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        """Handle GET requests for health or info on /api/chat; otherwise serve files."""
-        if self.path == '/api/chat':
+        """Handle GET requests for health or info on /api/gemini-chat; otherwise serve files."""
+        if self.path == '/api/gemini-chat':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -164,7 +164,7 @@ class RootedHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         """Handle POST requests - chat endpoint."""
-        if self.path == '/api/chat':
+        if self.path == '/api/gemini-chat':
             try:
                 # Get content length safely
                 content_length = int(self.headers.get('Content-Length', 0))

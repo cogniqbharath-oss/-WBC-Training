@@ -636,7 +636,7 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
       try {
-        const response = await fetch('/api/chat', {
+        const response = await fetch('/api/gemini-chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

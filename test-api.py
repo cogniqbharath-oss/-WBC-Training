@@ -1,4 +1,4 @@
-"""Quick test to verify the /api/chat endpoint works."""
+"""Quick test to verify the /api/gemini-chat endpoint works."""
 import requests
 import json
 
@@ -7,7 +7,7 @@ BASE_URL = "http://localhost:8000"
 try:
     # Test the API endpoint
     response = requests.post(
-        f"{BASE_URL}/api/chat",
+        f"{BASE_URL}/api/gemini-chat",
         json={"message": "Hello! What training programs do you offer?"},
         timeout=30
     )

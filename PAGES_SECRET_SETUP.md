@@ -23,7 +23,7 @@
 After deployment, test with:
 
 ```powershell
-curl -i -X POST https://wbctraining.pages.dev/api/chat `
+curl -i -X POST https://wbctraining.pages.dev/api/gemini-chat `
   -H "Content-Type: application/json" `
   -d '{"message":"Hello"}'
 ```
