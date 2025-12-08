@@ -104,11 +104,18 @@
         return;
       }
 
-      // ✅ ATTACHED ERROR-DETAIL LOGIC (THIS IS THE ONLY CHANGE)
       if (data.error) {
-        const extra = data.detail ? ` – ${data.detail}` : "";
+        const extra =
+          data.geminiMessage
+            ? ` – ${data.geminiMessage}`
+            : data.detail
+              ? ` – ${data.detail}`
+              : "";
+
         console.error("Chat service error:", data);
-        addAssistantMessage("Error from AI service: " + data.error + extra);
+        addAssistantMessage(
+          "Error from AI service: " + data.error + extra
+        );
         return;
       }
 

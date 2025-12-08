@@ -60,8 +60,7 @@ User: ${userMessage}
     const raw = await geminiRes.text();
 
     if (!geminiRes.ok) {
-      // ⛔ THIS IS THE PART YOU'RE SEEING NOW
-      // We surface Gemini's own error clearly so you know what to fix.
+      const raw = await geminiRes.text();
       let parsed;
       try {
         parsed = JSON.parse(raw);
@@ -84,7 +83,6 @@ User: ${userMessage}
         { status: 502, headers }
       );
     }
-
     let json;
     try {
       json = JSON.parse(raw);
