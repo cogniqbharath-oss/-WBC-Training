@@ -10,7 +10,7 @@
 6. Under **Production**, click **Add variable**
 7. Fill in:
    - **Variable name**: `GEMINI_API_KEY`
-   - **Value**: `AIzaSyAS2Oghf02JyoJ3-HDid7Nd54ZMxUA5pWQ`
+   - **Value**: `AIzaSyBmO0OOHhs6FLOHzb7AmrdFsgRiXRmDcSc`
    - **Encryption**: Check the box to mark as secret (recommended)
 8. Click **Save**
 9. Trigger a new deployment:
