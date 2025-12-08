@@ -97,10 +97,24 @@
 
       console.log("Chat raw response:", data || dataText);
 
-      if (!res.ok || !data) {
+      // ✅ handle API-level errors
+      if (!res.ok) {
         addAssistantMessage(
-          "Error: The chat service returned an invalid response. Please try again later."
+          "Error: Chat service returned an error. Please try again."
         );
+        return;
+      }
+
+      // ✅ handle backend-reported errors
+      if (data.error) {
+        const extra = data.detail ? ` – ${data.detail}` : "";
+        addAssistantMessage("Error from AI service: " + data.error + extra);
+        return;
+      }
+
+      // ✅ SUCCESS PATH (this was missing)
+      if (typeof data.reply === "string") {
+        addAssistantMessage(data.reply);
         return;
       }
 
