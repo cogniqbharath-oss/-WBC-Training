@@ -34,7 +34,7 @@ export async function onRequestPost({ request, env }) {
 
   // ---- 3) Call Gemini (catch network errors) ----
   const geminiUrl =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent";
 
   const prompt = `
 You are the AI Concierge for WBC Training.
