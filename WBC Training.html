@@ -801,10 +801,10 @@
       try {
         // Check if API key is configured (for client-side validation)
         if (typeof isApiKeyConfigured === 'function' && !isApiKeyConfigured()) {
-          throw new Error('Groq API key not configured on server. Please set the GROQ_API_KEY environment variable.');
+          throw new Error('Gemini API key not configured on server. Please set the GEMINI_API_KEY environment variable.');
         }
 
-        const response = await fetch('/chat', {
+        const response = await fetch('/api/gemini-chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

@@ -35,15 +35,25 @@ def load_api_key() -> str | None:
 
 # Configure Gemini API
 API_KEY = load_api_key()
-DEFAULT_MODEL = "gemini-1.5-pro"
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)
+DEFAULT_MODEL = "gemini-1.5-flash"
+
+# Try to find model in .env if not in os.environ
+def load_env_model():
+    env_path = ROOT / ".env"
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            if line.strip().startswith("GEMINI_MODEL="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
+    return None
+
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL") or load_env_model() or DEFAULT_MODEL
 
 client = None
 
 if API_KEY and genai:
     try:
         genai.configure(api_key=API_KEY)
-        print(f"✓ Gemini API configured successfully (preferred model: {GEMINI_MODEL})")
+        print(f"[OK] Gemini API configured successfully (preferred model: {GEMINI_MODEL})")
 
         # Attempt to list available models so we can choose a compatible one.
         available_models = []
@@ -82,7 +92,7 @@ if API_KEY and genai:
             print("Available models (sample):", available_models[:20])
 
         # Build an ordered candidate list
-        candidate_models = []
+        candidate_models = [GEMINI_MODEL]
         if available_models:
             preferred = [
                 'models/gemini-2.5-pro',
@@ -113,7 +123,7 @@ if API_KEY and genai:
                 print(f"Attempting model: {candidate}")
                 client = genai.GenerativeModel(candidate)
                 GEMINI_MODEL = candidate
-                print(f"✓ Selected working model: {GEMINI_MODEL}")
+                print(f"[OK] Selected working model: {GEMINI_MODEL}")
                 break
             except Exception as e:
                 print(f"Model {candidate} not available or incompatible: {e}")
