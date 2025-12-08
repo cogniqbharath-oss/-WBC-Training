@@ -650,64 +650,35 @@
         chatMessages.removeChild(loadingBubble);
 
         // Handle response with proper error checking
-        if (response.ok && data.response) {
-          appendMessage(data.response, 'bot');
+        if (response.ok && typeof data.reply === 'string') {
+          appendMessage(data.reply, 'bot');
+
         } else if (data.error) {
           appendMessage(`Error: ${data.error}`, 'bot');
+
         } else if (data.message) {
-          // Handle structured error responses from config.js
           appendMessage(`Error: ${data.message}`, 'bot');
+
         } else {
-          appendMessage('Unable to process your request. Please try again.', 'bot');
+          appendMessage(
+            'Sorry, I could not generate a response just now. Please try again.',
+            'bot'
+          );
         }
       } catch (error) {
+        // Remove loading bubble
         chatMessages.removeChild(loadingBubble);
-        appendMessage('Connection error. Please check your internet and try again.', 'bot');
+
+        // Handle network or other errors
         console.error('Chat error:', error);
+        appendMessage(
+          'Sorry, there was an error connecting to the chat service. Please try again.',
+          'bot'
+        );
       }
     });
   </script>
-  <!-- Launcher image (already on your site) -->
-  <img src="/images/chat-with-wbc.png" alt="Chat with WBC" class="cursor-pointer" />
-
-  <!-- AI Concierge Panel -->
-  <div id="ai-concierge-panel"
-    class="hidden fixed bottom-4 right-4 w-full max-w-sm rounded-2xl shadow-lg bg-white border border-slate-200 flex flex-col z-50">
-    <div class="flex items-center justify-between px-4 py-2 border-b border-slate-200">
-      <div class="text-sm font-semibold">AI Concierge</div>
-      <button id="ai-concierge-close" class="text-slate-400 hover:text-slate-600 text-lg leading-none">&times;</button>
-    </div>
-
-    <div id="ai-concierge-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-2 text-sm"></div>
-
-    <div class="px-3 pb-3 pt-2 border-t border-slate-200">
-      <div class="flex gap-2 mb-2">
-        <button data-ai-quick-prompt="What online & classroom courses do you offer?"
-          class="text-xs px-2 py-1 rounded-full border border-slate-200 hover:bg-slate-50">
-          Courses
-        </button>
-        <button data-ai-quick-prompt="How can I book a course with WBC Training?"
-          class="text-xs px-2 py-1 rounded-full border border-slate-200 hover:bg-slate-50">
-          Booking
-        </button>
-      </div>
-
-      <form id="ai-concierge-form" class="flex gap-2">
-        <input id="ai-concierge-input" type="text" placeholder="Ask about programmes, locations, travel..."
-          class="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-slate-400" />
-        <button id="ai-concierge-send" type="submit"
-          class="px-3 py-2 rounded-xl text-sm font-medium bg-slate-900 text-white hover:bg-slate-800">
-          Send
-        </button>
-      </form>
-
-      <button id="ai-concierge-clear" type="button" class="mt-1 text-[11px] text-slate-400 hover:text-slate-600">
-        Clear chat
-      </button>
-    </div>
-  </div>
-  <script src="/assets/script.js" defer></script>
-</body>
+  <script src="assets/script.js" defer></script>
 </body>
 
 
