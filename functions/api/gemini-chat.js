@@ -1,56 +1,38 @@
-export async function onRequest(context) {
+export async function onRequestPost(context) {
   const { request, env } = context;
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'X-Function-Active': 'true'
-  };
 
-  // CORS preflight
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers });
-  }
+  const body = await request.json();
+  const userMessage = body.message || "";
 
-  // Health/info for GET
-  if (request.method === 'GET') {
-    return new Response(JSON.stringify({
-      ok: true,
-      message: 'WBC Training chat endpoint. POST JSON {"message":"..."} to chat with Gemini.'
-    }), { status: 200, headers });
-  }
+  const geminiEndpoint =
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent";
 
-  // Accept only POST for chat payload
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({
-      ok: false,
-      response: `Method ${request.method} not supported; use POST`
-    }), { status: 200, headers });
-  }
+  const prompt = `
+You are the AI Concierge for WBC Training. 
+Answer helpfully and concisely.
 
-  // Parse JSON
-  let body;
-  try {
-    body = await request.json();
-  } catch (err) {
-    return new Response(JSON.stringify({
-      response: 'Error: Invalid JSON request'
-    }), { status: 400, headers });
-  }
+User: ${userMessage}
+  `;
 
-  if (!body || !body.message) {
-    return new Response(JSON.stringify({
-      response: 'Error: Message parameter is required'
-    }), { status: 400, headers });
-  }
+  const response = await fetch(`${geminiEndpoint}?key=${env.GEMINI_API_KEY}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }]
+    })
+  });
 
-  const userMessage = body.message.trim();
-  if (!userMessage) {
-    return new Response(JSON.stringify({
-      response: 'Error: Message cannot be empty'
-    }), { status: 400, headers });
-  }
+  const json = await response.json();
+
+  const reply =
+    json.candidates?.[0]?.content?.parts?.map((p) => p.text).join(" ") ||
+    "Sorry, I could not reply.";
+
+  return new Response(JSON.stringify({ reply }), {
+    headers: { "Content-Type": "application/json" }
+  });
+}
+export async function onRequestPost({ request, env }) {
 
   // Get Gemini API key from Pages environment
   const apiKey = env.GEMINI_API_KEY;
