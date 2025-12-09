@@ -1,0 +1,59 @@
+╔══════════════════════════════════════════════════════════════╗
+║           CHATBOT FIX - QUICK REFERENCE CARD                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+📋 PROBLEM
+─────────────────────────────────────────────────────────────
+Chatbot shows: "Sorry, there was an error connecting to the 
+chat service. Please try again."
+
+✅ DIAGNOSIS COMPLETE
+─────────────────────────────────────────────────────────────
+✓ API key is valid and working
+✓ Model is accessible
+✓ Code is correct
+✗ Environment variable missing on Cloudflare
+
+🔧 THE FIX (5 minutes)
+─────────────────────────────────────────────────────────────
+1. Go to: https://dash.cloudflare.com
+2. Navigate: Pages → wbctraining → Settings → Environment Variables
+3. Click: "Add variable"
+4. Add:
+   Name:  GEMINI_API_KEY
+   Value: AIzaSyCk_xGYQASuQTLLN_esdrN8mtPR-b-OcB4
+   Env:   ✓ Production  ✓ Preview
+
+5. Click: "Save"
+6. Wait: 1-2 minutes for auto-redeploy
+7. Test: https://wbctraining.pages.dev
+
+📖 DETAILED GUIDES
+─────────────────────────────────────────────────────────────
+→ Step-by-step: CLOUDFLARE_SETUP.md
+→ Full diagnosis: walkthrough.md
+→ Test script:   test-gemini-api.py
+
+🧪 TEST YOUR API KEY ANYTIME
+─────────────────────────────────────────────────────────────
+Run: python test-gemini-api.py
+Expected: [OK] SUCCESS! Model is working correctly
+
+💡 TROUBLESHOOTING
+─────────────────────────────────────────────────────────────
+Still not working? Check:
+□ Environment variables are saved in Cloudflare
+□ Both Production and Preview are checked
+□ Latest deployment shows "Success"
+□ Browser console (F12) for specific errors
+
+🎯 WHAT HAPPENS AFTER FIX
+─────────────────────────────────────────────────────────────
+✓ Cloudflare auto-redeploys your site
+✓ API endpoint can access the key
+✓ Chatbot connects to Gemini API
+✓ Users can chat with AI Concierge 24/7!
+
+═════════════════════════════════════════════════════════════
+Need help? Share screenshot of Cloudflare env vars page
+═════════════════════════════════════════════════════════════
