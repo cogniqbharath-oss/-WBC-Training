@@ -563,15 +563,20 @@
   <section class="chat-panel" id="chat-panel" aria-live="polite">
     <header>
       <strong>AI Concierge</strong>
-      <button id="chat-close" aria-label="Close chat">&times;</button>
+      <div class="chat-header-actions">
+        <button class="btn-clear" id="chat-clear">Clear Chat</button>
+        <button id="chat-close" aria-label="Close chat">&times;</button>
+      </div>
     </header>
     <div class="chat-messages" id="chat-messages">
-      <div class="chat-message bot">
-        Hi there! Ask me about course hours, booking availability, or travel directions and I’ll reply instantly.
-      </div>
+      <!-- Messages will appear here -->
+    </div>
+    <div id="chat-extra-content"></div>
+    <div class="chat-chips" id="chat-chips">
+      <!-- Suggestion chips will appear here -->
     </div>
     <form class="chat-form" id="chat-form">
-      <input type="text" id="chat-input" placeholder="Type your question..." aria-label="Chat input">
+      <input type="text" id="chat-input" placeholder="Type your question..." aria-label="Chat input" autocomplete="off">
       <button type="submit" class="btn solid">Send</button>
     </form>
   </section>
@@ -596,45 +601,150 @@
     const chatLauncher = document.getElementById('chat-launcher');
     const chatPanel = document.getElementById('chat-panel');
     const chatClose = document.getElementById('chat-close');
+    const chatClear = document.getElementById('chat-clear');
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const chatMessages = document.getElementById('chat-messages');
+    const chatChips = document.getElementById('chat-chips');
+    const chatExtra = document.getElementById('chat-extra-content');
 
-    function toggleChat(open) {
-      chatPanel.classList.toggle('visible', open);
-      if (open) {
-        chatInput.focus();
+    let interactionCount = 0;
+    let isLeadCaptureActive = false;
+    let leadData = { name: '', contact: '' };
+
+    const TRAINING_IMAGES = {
+      'classrooms': [
+        'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=400&q=80'
+      ],
+      'teams': [
+        'https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=400&q=80',
+        'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=400&q=80'
+      ]
+    };
+
+    function getTimeBasedGreeting() {
+      const hour = new Date().getHours();
+      if (hour < 12) return "Good morning! Looking to start your day with some leadership training?";
+      if (hour < 17) return "Good afternoon! How can I help you sharpen your business capabilities today?";
+      return "Good evening! Interested in our upcoming webinars or bespoke programmes?";
+    }
+
+    function appendMessage(text, sender = 'user', isRich = false) {
+      const wrapper = document.createElement('div');
+      wrapper.className = `chat-message ${sender}`;
+      
+      const content = document.createElement('div');
+      if (isRich) {
+        content.innerHTML = text;
       } else {
-        chatLauncher.focus();
+        content.textContent = text;
       }
+      wrapper.appendChild(content);
+
+      const timestamp = document.createElement('div');
+      timestamp.className = 'chat-timestamp';
+      timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      wrapper.appendChild(timestamp);
+
+      chatMessages.appendChild(wrapper);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return wrapper;
     }
 
-    function appendMessage(text, sender = 'user') {
-      const bubble = document.createElement('div');
-      bubble.className = `chat-message ${sender}`;
-      bubble.textContent = text;
-      chatMessages.appendChild(bubble);
+    function showTypingIndicator() {
+      const indicator = document.createElement('div');
+      indicator.className = 'chat-message bot typing-indicator-wrapper';
+      indicator.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
+      chatMessages.appendChild(indicator);
       chatMessages.scrollTop = chatMessages.scrollHeight;
+      return indicator;
     }
 
-    chatLauncher.addEventListener('click', () => toggleChat(true));
-    chatClose.addEventListener('click', () => toggleChat(false));
+    function addSuggestionChips() {
+      chatChips.innerHTML = '';
+      const chips = [
+        { label: '📚 Programmes', text: 'Tell me about your training programmes' },
+        { label: '🕒 Hours', text: 'What are your training hours?' },
+        { label: '📍 Location', text: 'Where is your office?' },
+        { label: '✨ Upcoming', text: 'What is the upcoming spotlight course?' }
+      ];
 
-    chatForm.addEventListener('submit', async event => {
-      event.preventDefault();
-      const message = chatInput.value.trim();
-      if (!message) return;
+      chips.forEach(chipData => {
+        const button = document.createElement('button');
+        button.className = 'chip';
+        button.textContent = chipData.label;
+        button.onclick = () => {
+          chatInput.value = chipData.text;
+          chatForm.dispatchEvent(new Event('submit'));
+        };
+        chatChips.appendChild(button);
+      });
+    }
 
-      appendMessage(message, 'user');
-      chatInput.value = '';
+    function addCTAButtons() {
+      const ctaHtml = `
+        <div class="chat-cta-group">
+          <a href="tel:+447540269827" class="chat-cta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3.02a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3.02a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7a2 2 0 0 1 1.72 2.03z"/></svg>
+            Call us
+          </a>
+          <a href="#contact" class="chat-cta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Our Location
+          </a>
+          <a href="#newsletter" class="chat-cta">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Request Proposal
+          </a>
+        </div>
+      `;
+      appendMessage(ctaHtml, 'bot', true);
+    }
 
-      // Show loading state
-      const loadingBubble = document.createElement('div');
-      loadingBubble.className = 'chat-message bot';
-      loadingBubble.textContent = '...';
-      chatMessages.appendChild(loadingBubble);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+    function checkImageQueries(message) {
+      const msg = message.toLowerCase();
+      let category = null;
+      if (msg.includes('classroom') || msg.includes('office')) category = 'classrooms';
+      if (msg.includes('team') || msg.includes('leader') || msg.includes('people')) category = 'teams';
 
+      if (category) {
+        const images = TRAINING_IMAGES[category];
+        const gridHtml = `
+          <div class="chat-image-grid">
+            ${images.map(img => `<img src="${img}" alt="${category}" onclick="window.open('${img}', '_blank')">`).join('')}
+          </div>
+          <p>Here are some images of our ${category}.</p>
+        `;
+        appendMessage(gridHtml, 'bot', true);
+        return true;
+      }
+      return false;
+    }
+
+    function startLeadCapture() {
+      isLeadCaptureActive = true;
+      appendMessage("I'd love to help you further. Could you please share your name?", 'bot');
+    }
+
+    async function handleChat(message) {
+      if (isLeadCaptureActive) {
+        if (!leadData.name) {
+          leadData.name = message;
+          appendMessage(`Thanks, ${leadData.name}! And what's your email or phone number?`, 'bot');
+        } else {
+          leadData.contact = message;
+          isLeadCaptureActive = false;
+          appendMessage(`Perfect! A member of our team will reach out to you at ${leadData.contact} shortly.`, 'bot');
+          addCTAButtons();
+          // Here you would typically POST leadData to a backend
+          console.log('Lead Captured:', leadData);
+        }
+        return;
+      }
+
+      const typing = showTypingIndicator();
+      
       try {
         const response = await fetch('/api/gemini-chat', {
           method: 'POST',
@@ -643,38 +753,61 @@
         });
 
         const data = await response.json();
+        chatMessages.removeChild(typing);
 
-        // Remove loading bubble
-        chatMessages.removeChild(loadingBubble);
-
-        // Handle response with proper error checking
-        if (response.ok && typeof data.reply === 'string') {
-          appendMessage(data.reply, 'bot');
-
-        } else if (data.error) {
-          appendMessage(`Error: ${data.error}`, 'bot');
-
-        } else if (data.message) {
-          appendMessage(`Error: ${data.message}`, 'bot');
-
+        if (response.ok && data.response) {
+          appendMessage(data.response, 'bot');
+          
+          interactionCount++;
+          checkImageQueries(message);
+          
+          if (interactionCount === 3) {
+            setTimeout(startLeadCapture, 1500);
+          }
         } else {
-          appendMessage(
-            'Sorry, I could not generate a response just now. Please try again.',
-            'bot'
-          );
+          appendMessage("I'm having a bit of trouble connecting. Try again or call us!", 'bot');
         }
       } catch (error) {
-        // Remove loading bubble
-        chatMessages.removeChild(loadingBubble);
-
-        // Handle network or other errors
-        console.error('Chat error:', error);
-        appendMessage(
-          'Sorry, there was an error connecting to the chat service. Please try again.',
-          'bot'
-        );
+        if (typing.parentNode) chatMessages.removeChild(typing);
+        appendMessage("Network error. Please check your connection.", 'bot');
       }
+    }
+
+    function initChat() {
+      chatMessages.innerHTML = '';
+      interactionCount = 0;
+      isLeadCaptureActive = false;
+      leadData = { name: '', contact: '' };
+      
+      appendMessage(getTimeBasedGreeting(), 'bot');
+      addSuggestionChips();
+      addCTAButtons();
+    }
+
+    function toggleChat(open) {
+      chatPanel.classList.toggle('visible', open);
+      if (open) {
+        chatInput.focus();
+        if (chatMessages.children.length === 0) initChat();
+      }
+    }
+
+    chatLauncher.addEventListener('click', () => toggleChat(true));
+    chatClose.addEventListener('click', () => toggleChat(false));
+    chatClear.addEventListener('click', initChat);
+
+    chatForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+
+      appendMessage(message, 'user');
+      chatInput.value = '';
+      handleChat(message);
     });
+
+    // Initialize on first open
+    initChat();
   </script>
   <script src="assets/script.js" defer></script>
 </body>

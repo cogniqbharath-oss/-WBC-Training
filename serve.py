@@ -95,10 +95,10 @@ if API_KEY and genai:
         candidate_models = [GEMINI_MODEL]
         if available_models:
             preferred = [
-                'models/gemini-2.5-pro',
-                'models/gemini-2.5-flash',
-                'models/gemini-2.0-pro',
-                'models/gemini-2.0-flash'
+                'models/gemini-2.0-flash',
+                'models/gemini-2.0-flash-lite-preview',
+                'models/gemini-1.5-flash',
+                'models/gemini-1.5-flash-8b'
             ]
             for p in preferred:
                 if any(p == name for name in available_models):
@@ -200,15 +200,22 @@ class RootedHandler(SimpleHTTPRequestHandler):
                     response_text = "Error: API Key not configured. Please set GEMINI_API_KEY environment variable."
                 else:
                     # System prompt for WBC Training context
-                    system_prompt = """You are an AI concierge for WBC Training, a business capability training company. 
-You help with:
-- Course information and schedules
-- Booking availability
-- Pricing and fees
-- Location and travel directions
-- Training programme details
+                    system_prompt = """You are an AI concierge for WBC Training, a business capability training company established in 2005. 
+You help users with:
+- Course information: 3-5 day classroom/online courses in Leadership, Procurement, Strategy, Governance, and Stakeholder Management.
+- Online Workshops: 1-2 hour focused sessions for rapid skill boosts.
+- In-House Training: Custom agendas delivered on-site or virtually.
+- Premium Offerings: Capital Portfolio Leadership (Flagship), Operational Excellence Lab (Simulation), and Energy Transition Studio (Advisory).
+- Key Clients: GKP, Accenture, Schlumberger, Delta Lift Resources, Summit Industrial, HKN, and FTSE 100 Utilities.
+- Contact: info@wbctraining.com or +44 7540 269 827.
+- Location: London, Dubai, Erbil (Registered in Epsom, KT17 1HQ, UK).
 
-Be helpful, professional, and concise. If you don't know something, suggest contacting info@wbctraining.com or calling +44 7540 269 827."""
+Guidelines:
+1. Be professional, helpful, and concise.
+2. If you don't know a specific detail, suggest contacting the team at info@wbctraining.com.
+3. PREVENT HALLUCINATION: Only provide information found in the context above or on the website. 
+4. If asked about "menu", "coffee", or "cafe", gently redirect the user that you are an AI for a Business Training company, not a cafe.
+5. Mention that most cohorts report 98% faster stakeholder alignment."""
                     
                     try:
                         response = client.generate_content(
