@@ -33,8 +33,11 @@ export async function onRequestPost({ request, env }) {
   }
 
   // ---- 3) Call Gemini (catch network errors) ----
-  const geminiUrl =
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent";
+  let model = env.GEMINI_MODEL || "gemini-1.5-flash";
+  if (model.startsWith("models/")) {
+    model = model.replace("models/", "");
+  }
+  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
   const prompt = `
 You are the AI Concierge for WBC Training.
@@ -130,7 +133,7 @@ User: ${userMessage}
     parts.map((p) => p.text || "").join(" ").trim() ||
     "Sorry, I could not generate a response right now.";
 
-  return new Response(JSON.stringify({ reply }), {
+  return new Response(JSON.stringify({ response: reply }), {
     status: 200,
     headers,
   });

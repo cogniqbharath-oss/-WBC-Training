@@ -633,7 +633,7 @@
     function appendMessage(text, sender = 'user', isRich = false) {
       const wrapper = document.createElement('div');
       wrapper.className = `chat-message ${sender}`;
-      
+
       const content = document.createElement('div');
       if (isRich) {
         content.innerHTML = text;
@@ -744,7 +744,7 @@
       }
 
       const typing = showTypingIndicator();
-      
+
       try {
         const response = await fetch('/api/gemini-chat', {
           method: 'POST',
@@ -755,12 +755,13 @@
         const data = await response.json();
         chatMessages.removeChild(typing);
 
-        if (response.ok && data.response) {
-          appendMessage(data.response, 'bot');
-          
+        const botReply = data.reply || data.response;
+        if (response.ok && botReply) {
+          appendMessage(botReply, 'bot');
+
           interactionCount++;
           checkImageQueries(message);
-          
+
           if (interactionCount === 3) {
             setTimeout(startLeadCapture, 1500);
           }
@@ -778,7 +779,7 @@
       interactionCount = 0;
       isLeadCaptureActive = false;
       leadData = { name: '', contact: '' };
-      
+
       appendMessage(getTimeBasedGreeting(), 'bot');
       addSuggestionChips();
       addCTAButtons();

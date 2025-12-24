@@ -134,6 +134,7 @@
       }
 
       const reply =
+        data.response ||
         data.reply ||
         data.text ||
         "Sorry, I couldn't generate a response just now. Please try again.";
