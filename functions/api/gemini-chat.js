@@ -5,141 +5,85 @@ export async function onRequestPost({ request, env }) {
     "Access-Control-Allow-Origin": "*",
   };
 
-  // ---- 1) Read request body safely ----
-  let body;
-  try {
-    body = await request.json();
-  } catch (e) {
-    return new Response(
-      JSON.stringify({ error: "Invalid JSON body", detail: String(e) }),
-      { status: 400, headers }
-    );
-  }
-
-  const userMessage = (body.message || "").toString().trim();
-  if (!userMessage) {
-    return new Response(
-      JSON.stringify({ error: "Missing `message` in request body" }),
-      { status: 400, headers }
-    );
-  }
-
-  // ---- 2) Check API key ----
+  // 1) Securely check API key
   if (!env.GEMINI_API_KEY) {
     return new Response(
-      JSON.stringify({ error: "GEMINI_API_KEY is not set in environment" }),
+      JSON.stringify({ error: "GEMINI_API_KEY is not set in Cloudflare" }),
       { status: 500, headers }
     );
   }
 
-  // ---- 3) Call Gemini (catch network errors) ----
-  let model = env.GEMINI_MODEL || "gemini-1.5-flash";
-  if (model.startsWith("models/")) {
-    model = model.replace("models/", "");
-  }
-  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  try {
+    const body = await request.json();
+    const userMessage = (body.message || "").toString().trim();
 
-  const prompt = `
-You are the AI Concierge for WBC Training.
+    if (!userMessage) {
+      return new Response(
+        JSON.stringify({ error: "Missing message in request body" }),
+        { status: 400, headers }
+      );
+    }
 
-Answer clearly and helpfully about:
-- Online & classroom courses
-- Online workshops
-- In-house training
-- Premium offerings and flagship programmes
+    // 2) Select working model (gemini-flash-latest is confirmed for this key)
+    const model = env.GEMINI_MODEL || "gemini-flash-latest";
+    const modelName = model.startsWith("models/") ? model.split("/")[1] : model;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
 
-If asked about bookings, remind users they can email info@wbctraining.com or call +44 7540 269 827.
+    // 3) Construct system prompt for WBC Training context
+    const prompt = `
+You are the AI Concierge for WBC Training. 
+Guidelines: Be professional and concise.
+About: 
+- 3-5 day courses in Leadership, Procurement, Strategy.
+- Online Workshops (1-2 hours).
+- In-house Training & Premium Programs.
+- Contact: info@wbctraining.com or +44 7540 269 827.
+- Location: London, Dubai, Erbil.
 
 User: ${userMessage}
-  `.trim();
+    `.trim();
 
-  let geminiRes;
-  try {
-    geminiRes = await fetch(
-      `${geminiUrl}?key=${encodeURIComponent(env.GEMINI_API_KEY)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: prompt }],
-            },
-          ],
-        }),
-      }
-    );
-  } catch (e) {
-    // Could not reach Google at all
-    return new Response(
-      JSON.stringify({
-        error: "Failed to reach Gemini API",
-        detail: String(e),
+    // 4) Fetch from Gemini API
+    const geminiRes = await fetch(geminiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
       }),
-      { status: 502, headers }
-    );
-  }
+    });
 
-  const text = await geminiRes.text();
+    const data = await geminiRes.json();
 
-  // ---- 4) Parse JSON (or return raw error) ----
-  let json = null;
-  try {
-    json = JSON.parse(text);
-  } catch (e) {
     if (!geminiRes.ok) {
-      // Gemini returned a non-JSON error body (rare but possible)
+      const errMsg = data.error?.message || "Gemini API error";
       return new Response(
-        JSON.stringify({
-          error: "Gemini API error (non-JSON response)",
-          status: geminiRes.status,
-          detail: text,
-        }),
+        JSON.stringify({ error: errMsg, status: geminiRes.status }),
         { status: 502, headers }
       );
     }
 
+    // 5) Extract reply
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "I'm sorry, I couldn't generate a response. Please try again or contact us.";
+
+    // 6) Return both 'reply' and 'response' for maximum compatibility
     return new Response(
       JSON.stringify({
-        error: "Failed to parse Gemini JSON",
-        status: geminiRes.status,
-        detail: text,
+        reply: reply,
+        response: reply // Local serve.py and some scripts look for 'response'
       }),
+      { status: 200, headers }
+    );
+
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: "Internal Server Error", detail: error.message }),
       { status: 500, headers }
     );
   }
-
-  // ---- 5) Handle Gemini error JSON ----
-  if (!geminiRes.ok) {
-    const message =
-      (json && json.error && json.error.message) || JSON.stringify(json);
-
-    return new Response(
-      JSON.stringify({
-        error: "Gemini API error",
-        status: geminiRes.status,
-        detail: message,
-      }),
-      { status: 502, headers }
-    );
-  }
-
-  // ---- 6) Normal success path ----
-  const candidates = json.candidates || [];
-  const first = candidates[0] || {};
-  const parts = (first.content && first.content.parts) || [];
-  const reply =
-    parts.map((p) => p.text || "").join(" ").trim() ||
-    "Sorry, I could not generate a response right now.";
-
-  return new Response(JSON.stringify({ response: reply }), {
-    status: 200,
-    headers,
-  });
 }
 
-// Handle OPTIONS preflight (good practice)
+// Handle OPTIONS preflight
 export function onRequestOptions() {
   return new Response(null, {
     status: 204,
