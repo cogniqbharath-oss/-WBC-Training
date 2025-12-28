@@ -2,28 +2,7 @@
 // Talks to Cloudflare Pages Function: /api/gemini-chat
 
 (function () {
-  const API_ENDPOINT = "https://summer-firefly-ae50.cogniq-bharath.workers.dev/";
-
-  const SYSTEM_PROMPT = `
-You are a friendly and helpful AI Concierge at WBC Training. 
-Your goal is to assist users with their inquiries about our business capability programmes in a warm, natural, and human-like way.
-
-About WBC Training:
-- Established in 2005.
-- Offers 3-5 day classroom/online courses in Leadership, Procurement, Strategy, Governance, and Stakeholder Management.
-- Provides 1-2 hour Online Workshops for rapid skill boosts.
-- Delivers custom in-house training globally (London, Dubai, Erbil).
-- Key programs include Capital Portfolio Leadership (Flagship executive program) and Operational Excellence Lab (On-site simulation).
-- Most cohorts report 98% faster stakeholder alignment within 6 weeks.
-- Contact: info@wbctraining.com or +44 7540 269 827.
-
-Human-Like Guidelines:
-- Be warm, conversational, and approachable. Avoid overly formal or robotic language.
-- Use natural transitions like "That's a great question!", "I'd be happy to help you with that," or "Certainly!"
-- If a user asks about something specific like course dates or details, provide the information helpfully and offer further assistance.
-- If you're unsure about a specific detail, suggest they reach out to our team at info@wbctraining.com.
-- Acknowledge the user's situation. 
-`.trim();
+  const API_ENDPOINT = "/api/gemini-chat";
 
   const launcherImage = document.querySelector(
     'img[alt="Chat with WBC"], img[alt="Chat with WBC Training"]'
@@ -104,7 +83,7 @@ Human-Like Guidelines:
       const res = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: `${SYSTEM_PROMPT}\n\nUser: ${text}` }),
+        body: JSON.stringify({ message: text }),
       });
 
       const dataText = await res.text();

@@ -887,14 +887,13 @@
           throw new Error('Gemini API key not configured on server. Please set the GEMINI_API_KEY environment variable.');
         }
 
-        const SYSTEM_PROMPT = "You are a friendly and helpful AI Concierge at WBC Training. Reply in a warm, human-like tone.";
-        const response = await fetch('https://summer-firefly-ae50.cogniq-bharath.workers.dev/', {
+        const response = await fetch('/api/gemini-chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            message: `${SYSTEM_PROMPT}\n\nUser: ${message}`,
+            message: message,
             history: chatHistory
           })
         });
