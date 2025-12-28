@@ -3,7 +3,7 @@
 
 const API_CONFIG = {
   PROVIDER: 'Gemini',
-  MODEL_NAME: 'gemini-2.0-flash',
+  MODEL_NAME: 'gemini-flash-latest',
   CHAT_ENDPOINT: '/api/gemini-chat',
   API_KEY_STATUS: 'Managed on server via GEMINI_API_KEY env variable',
   // Secure endpoint configuration - API key hidden server-side

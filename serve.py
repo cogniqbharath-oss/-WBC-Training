@@ -42,7 +42,7 @@ def load_env_model() -> str:
                 k, v = line.split("=", 1)
                 if k.strip() == "GEMINI_MODEL":
                     return v.strip().strip('"').strip("'")
-    return "gemini-2.0-flash"
+    return "gemini-flash-latest"
 
 API_KEY = load_api_key()
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL") or load_env_model()
@@ -75,7 +75,11 @@ class RootedHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({'status': 'online'}).encode('utf-8'))
+            payload = {
+                'ok': True,
+                'message': 'WBC Training chat endpoint. POST JSON { "message": "..." } to this endpoint.'
+            }
+            self.wfile.write(json.dumps(payload).encode('utf-8'))
             return
         return super().do_GET()
 
