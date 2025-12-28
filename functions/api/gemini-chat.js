@@ -24,8 +24,10 @@ export async function onRequestPost({ request, env }) {
       );
     }
 
-    // 2) Select working model
-    const workerUrl = "https://summer-firefly-ae50.cogniq-bharath.workers.dev/";
+    // 2) Construct Gemini API URL
+    const model = env.GEMINI_MODEL || "gemini-flash-latest";
+    const modelName = model.startsWith("models/") ? model.split("/")[1] : model;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
 
     // 3) Construct system prompt for WBC Training context with a human-like tone
     const prompt = `
@@ -51,25 +53,27 @@ Human-Like Guidelines:
 User: ${userMessage}
     `.trim();
 
-    // 4) Fetch from the specified Worker API
-    const workerRes = await fetch(workerUrl, {
+    // 4) Fetch from Gemini API
+    const geminiRes = await fetch(geminiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: prompt }),
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+      }),
     });
 
-    const data = await workerRes.json();
+    const data = await geminiRes.json();
 
-    if (!workerRes.ok) {
-      const errMsg = data.error || data.message || "Worker API error";
+    if (!geminiRes.ok) {
+      const errMsg = data.error?.message || "Gemini API error";
       return new Response(
-        JSON.stringify({ error: errMsg, status: workerRes.status }),
+        JSON.stringify({ error: errMsg, status: geminiRes.status }),
         { status: 502, headers }
       );
     }
 
-    // 5) Extract reply (handling different response formats)
-    const reply = data.reply || data.response || data.text ||
+    // 5) Extract reply
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text ||
       "I'm sorry, I couldn't generate a response. Please try again or contact us.";
 
     // 6) Return both 'reply' and 'response' for maximum compatibility

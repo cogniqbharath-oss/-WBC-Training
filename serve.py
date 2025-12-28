@@ -203,12 +203,9 @@ class RootedHandler(SimpleHTTPRequestHandler):
                     return
                 
                 if not client:
-                    # Even if local client fails, we try the worker
-                    worker_url = "https://summer-firefly-ae50.cogniq-bharath.workers.dev/"
+                    response_text = "Error: API Key not configured. Please set GEMINI_API_KEY environment variable."
                 else:
-                    worker_url = "https://summer-firefly-ae50.cogniq-bharath.workers.dev/"
-
-                system_prompt = """You are a friendly and helpful AI Concierge at WBC Training. 
+                    system_prompt = """You are a friendly and helpful AI Concierge at WBC Training. 
 Your goal is to assist users with their inquiries about our business capability programmes in a warm, natural, and human-like way.
 
 About WBC Training:
@@ -227,31 +224,18 @@ Human-Like Guidelines:
 - If you're unsure about a specific detail, suggest they reach out to our team at info@wbctraining.com—mentioning that a real human will get back to them quickly.
 - Acknowledge the user's situation. For example, "It sounds like you're looking to boost your team's performance; our 3-5 day leadership courses are excellent for that."
 """
-                
-                try:
-                    payload = {"message": f"{system_prompt}\n\nUser: {user_message}"}
-                    r = requests.post(worker_url, json=payload, timeout=10)
-                    if r.status_code == 200:
-                        data = r.json()
-                        response_text = data.get('reply') or data.get('response') or data.get('text') or "Sorry, I couldn't get a response."
-                    else:
-                        response_text = f"Worker Error: {r.status_code}"
-                except Exception as e:
-                    # Fallback to local genai if requests fail or not available
-                    if client:
-                        try:
-                            response = client.generate_content(
-                                f"{system_prompt}\n\nUser: {user_message}",
-                                generation_config=genai.types.GenerationConfig(
-                                    temperature=0.7,
-                                    max_output_tokens=800,
-                                )
+                    
+                    try:
+                        response = client.generate_content(
+                            f"{system_prompt}\n\nUser: {user_message}",
+                            generation_config=genai.types.GenerationConfig(
+                                temperature=0.7,
+                                max_output_tokens=800,
                             )
-                            response_text = response.text.strip()
-                        except Exception as inner_e:
-                            response_text = f"Emergency fallback error: {str(inner_e)}"
-                    else:
-                        response_text = f"Network error: {str(e)}"
+                        )
+                        response_text = response.text.strip()
+                    except Exception as e:
+                        response_text = f"Gemini API error: {str(e)}"
 
                 # Always return 200 with response field for client compatibility
                 self.send_response(200)
