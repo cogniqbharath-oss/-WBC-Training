@@ -52,22 +52,6 @@ def load_env_model():
                 return line.split("=", 1)[1].strip().strip('"').strip("'")
     return None
 
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL") or load_env_model() or DEFAULT_MODEL
-
-client = None
-
-if API_KEY and genai:
-    try:
-        genai.configure(api_key=API_KEY)
-        client = genai.GenerativeModel(GEMINI_MODEL)
-        print(f"[OK] Gemini API configured successfully with model: {GEMINI_MODEL}")
-    except Exception as api_error:
-        print(f"ERROR: Unable to initialize Gemini client -> {api_error}")
-        client = None
-elif not API_KEY:
-    print("WARNING: GEMINI_API_KEY not found. Chat endpoint disabled.")
-else:
-    client = None
 
 class RootedHandler(SimpleHTTPRequestHandler):
     """Serve files relative to the repository root and handle chat API."""

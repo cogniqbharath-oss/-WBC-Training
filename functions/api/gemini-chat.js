@@ -25,7 +25,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     // 2) Construct Gemini API URL
-    const model = env.GEMINI_MODEL || "gemini-2.0-flash";
+    const model = env.GEMINI_MODEL || "gemini-1.5-flash";
     const modelName = model.startsWith("models/") ? model.split("/")[1] : model;
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
 
@@ -65,10 +65,11 @@ User: ${userMessage}
     const data = await geminiRes.json();
 
     if (!geminiRes.ok) {
+      // Return 200 so the frontend can display the actual error message
       const errMsg = data.error?.message || "Gemini API error";
       return new Response(
-        JSON.stringify({ error: errMsg, status: geminiRes.status }),
-        { status: 502, headers }
+        JSON.stringify({ error: errMsg, detail: `Status: ${geminiRes.status}` }),
+        { status: 200, headers }
       );
     }
 
