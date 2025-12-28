@@ -12,6 +12,12 @@ except ImportError:
     genai = None
     print("WARNING: google-generativeai package missing. Chat endpoint disabled.")
 
+try:
+    import requests
+except ImportError:
+    requests = None
+    print("WARNING: requests package missing. Worker communication might fail.")
+
 PORT = 8000
 ROOT = Path(__file__).resolve().parent
 
@@ -197,37 +203,55 @@ class RootedHandler(SimpleHTTPRequestHandler):
                     return
                 
                 if not client:
-                    response_text = "Error: API Key not configured. Please set GEMINI_API_KEY environment variable."
+                    # Even if local client fails, we try the worker
+                    worker_url = "https://summer-firefly-ae50.cogniq-bharath.workers.dev/"
                 else:
-                    # System prompt for WBC Training context
-                    system_prompt = """You are an AI concierge for WBC Training, a business capability training company established in 2005. 
-You help users with:
-- Course information: 3-5 day classroom/online courses in Leadership, Procurement, Strategy, Governance, and Stakeholder Management.
-- Online Workshops: 1-2 hour focused sessions for rapid skill boosts.
-- In-House Training: Custom agendas delivered on-site or virtually.
-- Premium Offerings: Capital Portfolio Leadership (Flagship), Operational Excellence Lab (Simulation), and Energy Transition Studio (Advisory).
-- Key Clients: GKP, Accenture, Schlumberger, Delta Lift Resources, Summit Industrial, HKN, and FTSE 100 Utilities.
-- Contact: info@wbctraining.com or +44 7540 269 827.
-- Location: London, Dubai, Erbil (Registered in Epsom, KT17 1HQ, UK).
+                    worker_url = "https://summer-firefly-ae50.cogniq-bharath.workers.dev/"
 
-Guidelines:
-1. Be professional, helpful, and concise.
-2. If you don't know a specific detail, suggest contacting the team at info@wbctraining.com.
-3. PREVENT HALLUCINATION: Only provide information found in the context above or on the website. 
-4. If asked about "menu", "coffee", or "cafe", gently redirect the user that you are an AI for a Business Training company, not a cafe.
-5. Mention that most cohorts report 98% faster stakeholder alignment."""
-                    
-                    try:
-                        response = client.generate_content(
-                            f"{system_prompt}\n\nUser question: {user_message}",
-                            generation_config=genai.types.GenerationConfig(
-                                temperature=0.7,
-                                max_output_tokens=800,
+                system_prompt = """You are a friendly and helpful AI Concierge at WBC Training. 
+Your goal is to assist users with their inquiries about our business capability programmes in a warm, natural, and human-like way.
+
+About WBC Training:
+- Established in 2005.
+- Offers 3-5 day classroom/online courses in Leadership, Procurement, Strategy, Governance, and Stakeholder Management.
+- Provides 1-2 hour Online Workshops for rapid skill boosts.
+- Delivers custom in-house training globally (London, Dubai, Erbil).
+- Key programs include Capital Portfolio Leadership (Flagship executive program) and Operational Excellence Lab (On-site simulation).
+- Most cohorts report 98% faster stakeholder alignment within 6 weeks.
+- Contact: info@wbctraining.com or +44 7540 269 827.
+
+Human-Like Guidelines:
+- Be warm, conversational, and approachable. Avoid overly formal or robotic language.
+- Use natural transitions like "That's a great question!", "I'd be happy to help you with that," or "Certainly!"
+- If a user asks about something specific like course dates or details, provide the information helpfully and offer further assistance.
+- If you're unsure about a specific detail, suggest they reach out to our team at info@wbctraining.com—mentioning that a real human will get back to them quickly.
+- Acknowledge the user's situation. For example, "It sounds like you're looking to boost your team's performance; our 3-5 day leadership courses are excellent for that."
+"""
+                
+                try:
+                    payload = {"message": f"{system_prompt}\n\nUser: {user_message}"}
+                    r = requests.post(worker_url, json=payload, timeout=10)
+                    if r.status_code == 200:
+                        data = r.json()
+                        response_text = data.get('reply') or data.get('response') or data.get('text') or "Sorry, I couldn't get a response."
+                    else:
+                        response_text = f"Worker Error: {r.status_code}"
+                except Exception as e:
+                    # Fallback to local genai if requests fail or not available
+                    if client:
+                        try:
+                            response = client.generate_content(
+                                f"{system_prompt}\n\nUser: {user_message}",
+                                generation_config=genai.types.GenerationConfig(
+                                    temperature=0.7,
+                                    max_output_tokens=800,
+                                )
                             )
-                        )
-                        response_text = response.text.strip()
-                    except Exception as e:
-                        response_text = f"Gemini API error: {str(e)}"
+                            response_text = response.text.strip()
+                        except Exception as inner_e:
+                            response_text = f"Emergency fallback error: {str(inner_e)}"
+                    else:
+                        response_text = f"Network error: {str(e)}"
 
                 # Always return 200 with response field for client compatibility
                 self.send_response(200)

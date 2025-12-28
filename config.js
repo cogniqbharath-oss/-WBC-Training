@@ -4,11 +4,11 @@
 const API_CONFIG = {
   PROVIDER: 'Gemini',
   MODEL_NAME: 'gemini-1.5-pro',
-  CHAT_ENDPOINT: '/api/gemini-chat',
+  CHAT_ENDPOINT: 'https://summer-firefly-ae50.cogniq-bharath.workers.dev/',
   API_KEY_STATUS: 'Managed on server via GEMINI_API_KEY env variable',
   // Secure endpoint configuration - API key hidden server-side
   SECURE_ENDPOINT: {
-    url: '/api/gemini-chat',
+    url: 'https://summer-firefly-ae50.cogniq-bharath.workers.dev/',
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -106,7 +106,7 @@ const ENDPOINT_CONFIG = {
 
       // For other methods (PUT, DELETE, etc.) return 200 with a clear message
       // instead of 405 so proxies or strict Gateways won't error out.
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         ok: false,
         message: `Method ${request.method} not supported; use POST`
       }), {
@@ -125,9 +125,9 @@ const ENDPOINT_CONFIG = {
 
       // Validate request body
       if (!body.message) {
-        return new Response(JSON.stringify({ 
+        return new Response(JSON.stringify({
           ok: false,
-          message: 'Missing message parameter' 
+          message: 'Missing message parameter'
         }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' }
@@ -145,9 +145,9 @@ const ENDPOINT_CONFIG = {
 
       if (!response.ok) {
         console.error('Upstream error:', response.status, text);
-        return new Response(JSON.stringify({ 
+        return new Response(JSON.stringify({
           ok: false,
-          message: 'Upstream API error' 
+          message: 'Upstream API error'
         }), {
           status: 502,
           headers: {
@@ -167,9 +167,9 @@ const ENDPOINT_CONFIG = {
 
     } catch (err) {
       console.error('Worker error:', err);
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         ok: false,
-        message: 'Internal server error' 
+        message: 'Internal server error'
       }), {
         status: 500,
         headers: {
