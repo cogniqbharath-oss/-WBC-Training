@@ -8,8 +8,8 @@ export async function onRequestPost({ request, env }) {
   // 1) Securely check API key
   if (!env.GEMINI_API_KEY) {
     return new Response(
-      JSON.stringify({ error: "GEMINI_API_KEY is not set in Cloudflare" }),
-      { status: 500, headers }
+      JSON.stringify({ error: "GEMINI_API_KEY is not set in Cloudflare secrets." }),
+      { status: 200, headers }
     );
   }
 
@@ -20,35 +20,31 @@ export async function onRequestPost({ request, env }) {
     if (!userMessage) {
       return new Response(
         JSON.stringify({ error: "Missing message in request body" }),
-        { status: 400, headers }
+        { status: 200, headers }
       );
     }
 
     // 2) Construct Gemini API URL
-    const model = env.GEMINI_MODEL || "gemini-1.5-flash";
+    const model = env.GEMINI_MODEL || "gemini-2.0-flash";
     const modelName = model.startsWith("models/") ? model.split("/")[1] : model;
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
 
     // 3) Construct system prompt for WBC Training context with a human-like tone
     const prompt = `
-You are a friendly and helpful AI Concierge at WBC Training. 
-Your goal is to assist users with their inquiries about our business capability programmes in a warm, natural, and human-like way.
+You are a friendly and helpful AI Concierge at WBC Training (Business Capability Programmes). 
+Your goal is to assist users in a warm, natural, and human-like way.
 
 About WBC Training:
 - Established in 2005.
 - Offers 3-5 day classroom/online courses in Leadership, Procurement, Strategy, Governance, and Stakeholder Management.
 - Provides 1-2 hour Online Workshops for rapid skill boosts.
 - Delivers custom in-house training globally (London, Dubai, Erbil).
-- Key programs include Capital Portfolio Leadership (Flagship executive program) and Operational Excellence Lab (On-site simulation).
-- Most cohorts report 98% faster stakeholder alignment within 6 weeks.
 - Contact: info@wbctraining.com or +44 7540 269 827.
 
-Human-Like Guidelines:
-- Be warm, conversational, and approachable. Avoid overly formal or robotic language.
-- Use natural transitions like "That's a great question!", "I'd be happy to help you with that," or "Certainly!"
-- If a user asks about something specific like course dates or details, provide the information helpfully and offer further assistance.
-- If you're unsure about a specific detail, suggest they reach out to our team at info@wbctraining.com—mentioning that a real human will get back to them quickly.
-- Acknowledge the user's situation. For example, "It sounds like you're looking to boost your team's performance; our 3-5 day leadership courses are excellent for that."
+Guidelines:
+- Be warm and conversational.
+- Use natural transitions like "That's a great question!"
+- If unsure, suggest emailing info@wbctraining.com.
 
 User: ${userMessage}
     `.trim();
@@ -65,10 +61,12 @@ User: ${userMessage}
     const data = await geminiRes.json();
 
     if (!geminiRes.ok) {
-      // Return 200 so the frontend can display the actual error message
       const errMsg = data.error?.message || "Gemini API error";
       return new Response(
-        JSON.stringify({ error: errMsg, detail: `Status: ${geminiRes.status}` }),
+        JSON.stringify({
+          reply: `AI Service Error: ${errMsg}`,
+          error: errMsg
+        }),
         { status: 200, headers }
       );
     }
@@ -88,8 +86,12 @@ User: ${userMessage}
 
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: "Internal Server Error", detail: error.message }),
-      { status: 500, headers }
+      JSON.stringify({
+        reply: "Sorry, I had trouble processing that. Please try again.",
+        error: "Internal Server Error",
+        detail: error.message
+      }),
+      { status: 200, headers }
     );
   }
 }
