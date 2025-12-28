@@ -25,7 +25,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     // 2) Construct Gemini API URL
-    const model = env.GEMINI_MODEL || "gemini-flash-latest";
+    const model = env.GEMINI_MODEL || "gemini-2.0-flash";
     const modelName = model.startsWith("models/") ? model.split("/")[1] : model;
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
 

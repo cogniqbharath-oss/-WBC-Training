@@ -41,7 +41,7 @@ def load_api_key() -> str | None:
 
 # Configure Gemini API
 API_KEY = load_api_key()
-DEFAULT_MODEL = "gemini-1.5-flash"
+DEFAULT_MODEL = "gemini-2.0-flash"
 
 # Try to find model in .env if not in os.environ
 def load_env_model():
@@ -59,84 +59,8 @@ client = None
 if API_KEY and genai:
     try:
         genai.configure(api_key=API_KEY)
-        print(f"[OK] Gemini API configured successfully (preferred model: {GEMINI_MODEL})")
-
-        # Attempt to list available models so we can choose a compatible one.
-        available_models = []
-        try:
-            lm = None
-            try:
-                lm = genai.list_models()
-            except Exception:
-                try:
-                    lm = genai.models.list()
-                except Exception:
-                    lm = None
-
-            if lm is not None:
-                if isinstance(lm, dict) and 'models' in lm:
-                    for m in lm['models']:
-                        if isinstance(m, dict) and 'name' in m:
-                            available_models.append(m['name'])
-                        elif isinstance(m, str):
-                            available_models.append(m)
-                elif hasattr(lm, 'models'):
-                    for m in lm.models:
-                        name = getattr(m, 'name', None) or getattr(m, 'id', None) or str(m)
-                        available_models.append(name)
-                else:
-                    try:
-                        for m in lm:
-                            name = getattr(m, 'name', None) or str(m)
-                            available_models.append(name)
-                    except Exception:
-                        pass
-        except Exception as e:
-            print(f"Could not list models: {e}")
-
-        if available_models:
-            print("Available models (sample):", available_models[:20])
-
-        # Build an ordered candidate list
-        candidate_models = [GEMINI_MODEL]
-        if available_models:
-            preferred = [
-                'models/gemini-2.0-flash',
-                'models/gemini-2.0-flash-lite-preview',
-                'models/gemini-1.5-flash',
-                'models/gemini-1.5-flash-8b'
-            ]
-            for p in preferred:
-                if any(p == name for name in available_models):
-                    candidate_models.append(p)
-
-            for name in available_models:
-                lname = name.lower()
-                if 'gemini' in lname and 'embed' not in lname and 'embedding' not in lname and 'tts' not in lname:
-                    if name not in candidate_models:
-                        candidate_models.append(name)
-
-        candidate_models.extend([
-            GEMINI_MODEL,
-            'gemini-1.5',
-            'gemini-1.0',
-            'models/text-bison-001',
-            'text-bison-001'
-        ])
-
-        for candidate in candidate_models:
-            try:
-                print(f"Attempting model: {candidate}")
-                client = genai.GenerativeModel(candidate)
-                GEMINI_MODEL = candidate
-                print(f"[OK] Selected working model: {GEMINI_MODEL}")
-                break
-            except Exception as e:
-                print(f"Model {candidate} not available or incompatible: {e}")
-
-        if not client:
-            print("ERROR: Unable to find a compatible Gemini model. Chat endpoint disabled.")
-
+        client = genai.GenerativeModel(GEMINI_MODEL)
+        print(f"[OK] Gemini API configured successfully with model: {GEMINI_MODEL}")
     except Exception as api_error:
         print(f"ERROR: Unable to initialize Gemini client -> {api_error}")
         client = None
