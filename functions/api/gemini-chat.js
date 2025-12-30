@@ -1,37 +1,55 @@
-// Cloudflare Pages Function: POST /api/gemini-chat
-export async function onRequestPost({ request, env }) {
-  const headers = {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-  };
+/**
+ * Cloudflare Worker: summer-firefly-ae50.cogniq-bharath.workers.dev
+ * Common Worker script for WBC Training Chatbot
+ * Handles: System Prompt (Persona: Sarah), Chat History, and CORS
+ */
 
-  // 1) Securely check API key
-  if (!env.GEMINI_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: "GEMINI_API_KEY is not set in Cloudflare secrets." }),
-      { status: 200, headers }
-    );
-  }
+export default {
+  async fetch(request, env) {
+    const headers = {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
 
-  try {
-    const body = await request.json();
-    const userMessage = (body.message || "").toString().trim();
-    const history = body.history || []; // Expecting [{role, parts: [{text}]}]
+    // 1) Handle CORS Preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers });
+    }
 
-    if (!userMessage) {
+    // 2) Only allow POST
+    if (request.method !== "POST") {
+      return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers });
+    }
+
+    // 3) Securely check API key
+    if (!env.GEMINI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "Missing message in request body" }),
+        JSON.stringify({ error: "GEMINI_API_KEY is not set in Worker environment." }),
         { status: 200, headers }
       );
     }
 
-    // 2) Construct Gemini API URL
-    const model = env.GEMINI_MODEL || "gemini-flash-latest";
-    const modelName = model.startsWith("models/") ? model.split("/")[1] : model;
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
+    try {
+      const body = await request.json();
+      const userMessage = (body.message || "").toString().trim();
+      const history = body.history || []; // Expecting [{role, parts: [{text}]}]
 
-    // 3) Construct system prompt for WBC Training context with a natural, human tone
-    const systemInstruction = `
+      if (!userMessage) {
+        return new Response(
+          JSON.stringify({ error: "Missing message in request body" }),
+          { status: 200, headers }
+        );
+      }
+
+      // 4) Construct API URL
+      // The user specified "gemma model". For Gemini API, a common gemma model is 'gemma-2-9b-it'.
+      const modelName = env.GEMINI_MODEL || "gemma-2-9b-it";
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
+
+      // 5) Construct Sarah Persona System Instruction
+      const systemInstruction = `
 You are Sarah, a friendly and experienced training consultant from WBC Training. 
 Your goal is to help visitors understand how our business capability programmes can help their teams.
 
@@ -60,77 +78,71 @@ Personality & Tone Guidelines:
 - Answer Directly: Still ensure the user's specific question is answered clearly.
 `.trim();
 
-    // Prepare contents for Gemini API (System Instruction + History + Current Message)
-    // Note: v1beta support system_instruction, but for simplicity here we prepend it to the first message or use it as a preamble.
-    const contents = [];
+      // 6) Prepare contents for API (System Instruction + History + Current Message)
+      const contents = [];
 
-    // Add history if present
-    if (history.length > 0) {
-      contents.push(...history);
-    }
+      // Add history if present
+      if (history.length > 0) {
+        contents.push(...history);
+      }
 
-    // Add current user message with system context prepended if it's the first message
-    const formattedUserMessage = history.length === 0
-      ? `System Instructions: ${systemInstruction}\n\nUser: ${userMessage}`
-      : userMessage;
+      // Prepend system instruction to the first message if no history, or add as a user message context
+      const formattedUserMessage = history.length === 0
+        ? `System Instructions: ${systemInstruction}\n\nUser: ${userMessage}`
+        : userMessage;
 
-    contents.push({ role: "user", parts: [{ text: formattedUserMessage }] });
+      contents.push({ role: "user", parts: [{ text: formattedUserMessage }] });
 
-    // 4) Fetch from Gemini API
-    const geminiRes = await fetch(geminiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: contents,
-      }),
-    });
+      // 7) Fetch from Gemini/Gemma API
+      const geminiRes = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: contents,
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          }
+        }),
+      });
 
-    const data = await geminiRes.json();
+      const data = await geminiRes.json();
 
-    if (!geminiRes.ok) {
-      const errMsg = data.error?.message || "Gemini API error";
+      if (!geminiRes.ok) {
+        const errMsg = data.error?.message || "Model API error";
+        return new Response(
+          JSON.stringify({
+            reply: `AI Service Error: ${errMsg}`,
+            error: errMsg
+          }),
+          { status: 200, headers }
+        );
+      }
+
+      // 8) Extract and return reply
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+        "I'm sorry, I couldn't generate a response. Please try again or contact us.";
+
       return new Response(
         JSON.stringify({
-          reply: `AI Service Error: ${errMsg}`,
-          error: errMsg
+          reply: reply,
+          response: reply,
+          model: modelName
+        }),
+        { status: 200, headers }
+      );
+
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          reply: "Sorry, I had trouble processing that. Please try again.",
+          error: "Internal Server Error",
+          detail: error.message
         }),
         { status: 200, headers }
       );
     }
-
-    // 5) Extract reply
-    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "I'm sorry, I couldn't generate a response. Please try again or contact us.";
-
-    // 6) Return both 'reply' and 'response' for maximum compatibility
-    return new Response(
-      JSON.stringify({
-        reply: reply,
-        response: reply
-      }),
-      { status: 200, headers }
-    );
-
-  } catch (error) {
-    return new Response(
-      JSON.stringify({
-        reply: "Sorry, I had trouble processing that. Please try again.",
-        error: "Internal Server Error",
-        detail: error.message
-      }),
-      { status: 200, headers }
-    );
-  }
-}
-
-// Handle OPTIONS preflight
-export function onRequestOptions() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
-}
+  },
+};
