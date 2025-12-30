@@ -761,7 +761,7 @@
       await new Promise(resolve => setTimeout(resolve, thinkingTime));
 
       try {
-        const response = await fetch('/api/gemini-chat', {
+        const response = await fetch('https://summer-firefly-ae50.cogniq-bharath.workers.dev', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
