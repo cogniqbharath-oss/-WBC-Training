@@ -16,6 +16,7 @@ export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json();
     const userMessage = (body.message || "").toString().trim();
+    const history = body.history || []; // Expecting [{role, parts: [{text}]}]
 
     if (!userMessage) {
       return new Response(
@@ -29,34 +30,58 @@ export async function onRequestPost({ request, env }) {
     const modelName = model.startsWith("models/") ? model.split("/")[1] : model;
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
 
-    // 3) Construct system prompt for WBC Training context with a direct and professional human tone
-    const prompt = `
-Context: You are a professional training consultant at WBC Training. 
-Goal: Provide accurate, direct, and helpful information about our business capability programmes.
+    // 3) Construct system prompt for WBC Training context with a natural, human tone
+    const systemInstruction = `
+You are Sarah, a friendly and experienced training consultant from WBC Training. 
+Your goal is to help visitors understand how our business capability programmes can help their teams.
 
 About WBC Training:
-- Established in 2005.
-- Offers 3-5 day classroom/online courses in Leadership, Procurement, Strategy, Governance, and Stakeholder Management.
-- Provides 1-2 hour Online Workshops for rapid skill boosts.
-- Delivers custom in-house training globally (London, Dubai, Erbil).
-- Key programs include Capital Portfolio Leadership and Operational Excellence Lab.
-- Contact: info@wbctraining.com or +44 7540 269 827.
+- WBC Training has been developing business capabilities since 2005.
+- We specialize in training for complex operations and capital projects in energy, infrastructure, and life sciences.
+- Our offerings include:
+    * 3–5 day Online & Classroom Courses: Focused on Leadership, Procurement, Strategy, Governance, and Stakeholder Management.
+    * 1–2 hour Online Workshops: Rapid skill boosts for busy professionals.
+    * In-House Training: Custom-tailored agendas delivered on-site or virtually.
+- Premium Flagship Programmes:
+    * Capital Portfolio Leadership: 5-day intensive for executives (London, Dubai, Houston).
+    * Operational Excellence Lab: 3-day immersive lab with digital twin simulations.
+    * Energy Transition Studio: 2-day strategic advisory sprint.
+- Key Insights: We offer resources like the CREST Model for building trust and frameworks for difficult discussions.
+- Contact Details: 
+    * Email: info@wbctraining.com
+    * Phone/WhatsApp: +44 7540 269 827
+    * Office: Epsom, U.K. (Registered No. 9454985).
 
-Tone Guidelines:
-- Professional and Direct: Answer the user's question immediately. Do not use conversational filler or clichés like "That's a great question!" or "I'd be happy to help." 
-- Concise: Provide the facts clearly. If you don't have a specific detail, suggest contacting our team directly.
-- Contextual: Acknowledge the specific program or service the user is asking about.
-- Human, not Robotic: Use natural business language. Avoid sounding like a scripted support bot.
+Personality & Tone Guidelines:
+- Be Human: Use a warm, professional, and helpful tone. Speak like a real person, not a database.
+- Conversational: It's okay to use friendly openings like "Hello! I'd be happy to help with that" or "That's a great area to focus on."
+- Empathetic: Acknowledge the user's needs or challenges (e.g., managing complex projects).
+- Informative & Natural: Provide accurate details from the info above, but present them naturally in conversation.
+- Answer Directly: Still ensure the user's specific question is answered clearly.
+`.trim();
 
-User: ${userMessage}
-    `.trim();
+    // Prepare contents for Gemini API (System Instruction + History + Current Message)
+    // Note: v1beta support system_instruction, but for simplicity here we prepend it to the first message or use it as a preamble.
+    const contents = [];
+
+    // Add history if present
+    if (history.length > 0) {
+      contents.push(...history);
+    }
+
+    // Add current user message with system context prepended if it's the first message
+    const formattedUserMessage = history.length === 0
+      ? `System Instructions: ${systemInstruction}\n\nUser: ${userMessage}`
+      : userMessage;
+
+    contents.push({ role: "user", parts: [{ text: formattedUserMessage }] });
 
     // 4) Fetch from Gemini API
     const geminiRes = await fetch(geminiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        contents: contents,
       }),
     });
 

@@ -727,6 +727,18 @@
       appendMessage("I'd love to help you further. Could you please share your name?", 'bot');
     }
 
+    let chatHistory = [];
+
+    function formatMarkdown(text) {
+      // Very basic markdown handling for bold, italics, and lists
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/^\s*[\-\*]\s+(.*)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>)/gms, '<ul>$1</ul>')
+        .replace(/\n/g, '<br>');
+    }
+
     async function handleChat(message) {
       if (isLeadCaptureActive) {
         if (!leadData.name) {
@@ -737,7 +749,6 @@
           isLeadCaptureActive = false;
           appendMessage(`Perfect! A member of our team will reach out to you at ${leadData.contact} shortly.`, 'bot');
           addCTAButtons();
-          // Here you would typically POST leadData to a backend
           console.log('Lead Captured:', leadData);
         }
         return;
@@ -745,11 +756,18 @@
 
       const typing = showTypingIndicator();
 
+      // Simulate natural thinking time
+      const thinkingTime = Math.random() * 1000 + 800;
+      await new Promise(resolve => setTimeout(resolve, thinkingTime));
+
       try {
         const response = await fetch('/api/gemini-chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: message })
+          body: JSON.stringify({
+            message: message,
+            history: chatHistory
+          })
         });
 
         const data = await response.json();
@@ -757,19 +775,26 @@
 
         const botReply = data.reply || data.response;
         if (response.ok && botReply) {
-          appendMessage(botReply, 'bot');
+          appendMessage(formatMarkdown(botReply), 'bot', true);
+
+          chatHistory.push({ role: "user", parts: [{ text: message }] });
+          chatHistory.push({ role: "model", parts: [{ text: botReply }] });
+
+          if (chatHistory.length > 20) {
+            chatHistory = chatHistory.slice(-20);
+          }
 
           interactionCount++;
           checkImageQueries(message);
 
           if (interactionCount === 3) {
-            setTimeout(startLeadCapture, 1500);
+            setTimeout(startLeadCapture, 2000);
           }
         } else {
           appendMessage("I'm having a bit of trouble connecting. Try again or call us!", 'bot');
         }
       } catch (error) {
-        if (typing.parentNode) chatMessages.removeChild(typing);
+        if (typing && typing.parentNode) chatMessages.removeChild(typing);
         appendMessage("Network error. Please check your connection.", 'bot');
       }
     }
@@ -779,6 +804,7 @@
       interactionCount = 0;
       isLeadCaptureActive = false;
       leadData = { name: '', contact: '' };
+      chatHistory = [];
 
       appendMessage(getTimeBasedGreeting(), 'bot');
       addSuggestionChips();
