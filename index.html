@@ -766,6 +766,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: message,
+            prompt: message, // Added for compatibility with workers expecting 'prompt'
             history: chatHistory
           })
         });
@@ -773,25 +774,28 @@
         const data = await response.json();
         chatMessages.removeChild(typing);
 
-        const botReply = data.reply || data.response;
-        if (response.ok && botReply) {
-          appendMessage(formatMarkdown(botReply), 'bot', true);
+        if (response.ok) {
+          const botReply = data.reply || data.response;
+          if (botReply) {
+            appendMessage(formatMarkdown(botReply), 'bot', true);
 
-          chatHistory.push({ role: "user", parts: [{ text: message }] });
-          chatHistory.push({ role: "model", parts: [{ text: botReply }] });
+            chatHistory.push({ role: "user", parts: [{ text: message }] });
+            chatHistory.push({ role: "model", parts: [{ text: botReply }] });
 
-          if (chatHistory.length > 20) {
-            chatHistory = chatHistory.slice(-20);
-          }
+            if (chatHistory.length > 20) {
+              chatHistory = chatHistory.slice(-20);
+            }
 
-          interactionCount++;
-          checkImageQueries(message);
+            interactionCount++;
+            checkImageQueries(message);
 
-          if (interactionCount === 3) {
-            setTimeout(startLeadCapture, 2000);
+            if (interactionCount === 3) {
+              setTimeout(startLeadCapture, 2000);
+            }
           }
         } else {
-          appendMessage("I'm having a bit of trouble connecting. Try again or call us!", 'bot');
+          const errorMsg = data.reply || data.error || "I'm having a bit of trouble connecting.";
+          appendMessage(errorMsg, 'bot');
         }
       } catch (error) {
         if (typing && typing.parentNode) chatMessages.removeChild(typing);
