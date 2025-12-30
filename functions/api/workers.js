@@ -1,5 +1,5 @@
 /**
- * Cloudflare Worker: summer-firefly-ae50.cogniq-bharath.workers.dev
+ * Cloudflare Worker: https://summer-firefly-ae50.cogniq-bharath.workers.dev/
  * Common Worker script for WBC Training Chatbot
  * Handles: System Prompt (Persona: Sarah), Chat History, and CORS
  */
