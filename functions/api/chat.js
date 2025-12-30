@@ -22,8 +22,8 @@ export default {
     try {
       const { prompt } = await request.json();
 
-      // Using Gemma 2 (current stable version for API)
-      const model = "gemma-2-9b-it";
+      // Using Gemini 1.5 Flash
+      const model = "gemini-1.5-flash";
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
 
       const response = await fetch(url, {
