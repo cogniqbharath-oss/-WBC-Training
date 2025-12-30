@@ -84,7 +84,7 @@ export default {
             }
 
             // Model Configuration
-            const modelName = env.GEMINI_MODEL || "gemma-3-4b-it";
+            const modelName = env.GEMINI_MODEL || "gemma-3-27b-it";
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
 
             // Sarah Persona
