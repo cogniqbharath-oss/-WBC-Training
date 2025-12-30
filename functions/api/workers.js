@@ -28,27 +28,30 @@ export default {
         try {
             const body = await request.json();
 
-            // Extract message - supporting both 'message' and 'prompt' keys for compatibility
+            // Accept both 'message' and 'prompt' for compatibility
             const userMessage = (body.message || body.prompt || "").toString().trim();
             const history = body.history || [];
 
             if (!userMessage) {
-                return new Response(JSON.stringify({ error: "Input is empty. Please provide 'message' or 'prompt'." }), {
-                    status: 400,
+                return new Response(JSON.stringify({
+                    error: "No message provided. Please include 'message' or 'prompt' in your request."
+                }), {
+                    status: 200,
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
             }
 
             // 3) Securely check API key
             if (!env.GEMINI_API_KEY) {
-                return new Response(JSON.stringify({ error: "API Key missing in Worker environment variables." }), {
-                    status: 500,
+                return new Response(JSON.stringify({
+                    error: "API Key missing in Worker environment variables."
+                }), {
+                    status: 200,
                     headers: { ...corsHeaders, "Content-Type": "application/json" }
                 });
             }
 
             // 4) Model Configuration
-            // Fallback to gemini-1.5-flash if Gemma has issues, but defaulting to user's preference
             const modelName = env.GEMINI_MODEL || "gemini-1.5-flash";
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${env.GEMINI_API_KEY}`;
 
